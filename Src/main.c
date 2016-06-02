@@ -62,7 +62,7 @@ extern void initialise_monitor_handles(void);
 /* USER CODE BEGIN 0 */
 
 uint8_t buffer[1];
-
+FILE uart2_stream = FDEV_SETUP_STREAM()
 
 /* USER CODE END 0 */
 
