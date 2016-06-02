@@ -84,7 +84,7 @@ int main(void)
   MX_USART2_UART_Init();
 
   /* USER CODE BEGIN 2 */
-
+  HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -94,7 +94,8 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-
+	  HAL_GPIO_TogglePin(LD3_GPIO_Port,LD3_Pin);
+	  HAL_Delay(500);
   }
   /* USER CODE END 3 */
 
