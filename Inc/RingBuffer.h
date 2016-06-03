@@ -7,8 +7,8 @@
 
 #ifndef RINGBUFFER_H_
 #define RINGBUFFER_H_
-#include <stdint.h>
-#include <stddef.h>
+#include <stdint.h>//uint*_t
+#include <stddef.h>//size_t
 #include <string.h> // memcpy
 #include <stdlib.h> //realloc
 typedef struct RingBuffer_s {

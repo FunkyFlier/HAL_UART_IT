@@ -57,10 +57,11 @@ int RingBuffer_write(RingBuffer_t *rb,char *in,int count){
 }
 
 int RingBuffer_read(RingBuffer_t *rb,char *out,int count){
-	/*if (count > rb->available){
-		return 1;
+	if (count > rb->available){
+			return 1;
 	}
-	if (rb->readIdx + count < rb->size){
+//to do fix wrap handling
+	/*if (rb->readIdx + count < rb->writeIdx){
 		memcpy(out,&rb->buffer[rb->readIdx],count);
 		rb->readIdx += count;
 	}else{
@@ -68,6 +69,12 @@ int RingBuffer_read(RingBuffer_t *rb,char *out,int count){
 		memcpy(out,&rb->buffer[rb->readIdx],  part);
 		memcpy(out + part, rb->buffer, count - part);
 		rb->readIdx = count - part - 1;
+	}
+	if (count == rb->available){
+		rb->available = 0;
+		rb->readIdx = 0;
+		rb->writeIdx = 0;
+		return 2;
 	}*/
 
 	return 0;
