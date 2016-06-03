@@ -34,7 +34,11 @@
 #include "stm32f4xx_hal.h"
 
 /* USER CODE BEGIN Includes */
-
+#include <stdint.h>
+#include <stddef.h>
+#include <string.h> // memcpy
+#include <stdlib.h> //realloc
+#include "RingBuffer.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -62,7 +66,7 @@ extern void initialise_monitor_handles(void);
 /* USER CODE BEGIN 0 */
 
 uint8_t buffer[1];
-FILE uart2_stream = FDEV_SETUP_STREAM()
+//FILE uart2_stream = FDEV_SETUP_STREAM()
 
 /* USER CODE END 0 */
 
@@ -74,7 +78,7 @@ int main(void)
 	printf("start\n");
   /* USER CODE END 1 */
 
-  /* MCU Configuration----------------------------------------------------------*/
+	/* MCU Configuration----------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
