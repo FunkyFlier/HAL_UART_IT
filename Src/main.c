@@ -61,6 +61,9 @@ static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 extern void initialise_monitor_handles(void);
+int Uart2PutC(int, FILE*);
+int Uart2GetC(FILE*);
+int UartSendBuffer(UART_HandleTypeDef*,uint8_t*,int ,RingBuffer_t*);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -69,7 +72,7 @@ uint8_t ISRBuffer[1];
 uint8_t UART2_RX_BUF[UART_BUF_SIZE];
 uint8_t UART2_TX_BUF[UART_BUF_SIZE];
 RingBuffer_t Uart2RXBuffer;
-//RingBuffer_t UART2TXBuffer;
+RingBuffer_t Uart2TXBuffer;
 
 //FILE uart2_stream = FDEV_SETUP_STREAM()
 
@@ -79,8 +82,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	initialise_monitor_handles();
-	printf("start\n");
+	int toTransmit;
   /* USER CODE END 1 */
 
 	/* MCU Configuration----------------------------------------------------------*/
@@ -95,17 +97,19 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM2_Init();
   MX_USART2_UART_Init();
-
   /* USER CODE BEGIN 2 */
-	HAL_TIM_Base_Start_IT(&htim2);
+	//HAL_TIM_Base_Start_IT(&htim2);
 	HAL_GPIO_WritePin(LD6_GPIO_Port,LD6_Pin,0);
 	RingBufferCreate(&Uart2RXBuffer,UART2_RX_BUF,UART_BUF_SIZE);
+	RingBufferCreate(&Uart2TXBuffer,UART2_TX_BUF,UART_BUF_SIZE);
 	if (HAL_UART_Receive_IT(&huart2, (uint8_t *) ISRBuffer, 1) != HAL_OK) {
 		while (1) {
 			HAL_GPIO_TogglePin(LD6_GPIO_Port, LD6_Pin);
 			HAL_Delay(500);
 		}
 	}
+	initialise_monitor_handles();
+	printf("start\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -116,8 +120,16 @@ int main(void)
   /* USER CODE BEGIN 3 */
 		HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 		HAL_Delay(500);
+		//printf("%u\n",Uart2RXBuffer.available);
+		if (Uart2RXBuffer.available > 0){
+			toTransmit = Uart2RXBuffer.available;
+			UartSendBuffer(&huart2,Uart2RXBuffer.buffer,Uart2RXBuffer.available,&Uart2TXBuffer);
+			Uart2RXBuffer.available -= toTransmit;
+		}
 		/*if (Uart2RXBuffer.available > 0){
-			HAL_UART_Transmit_IT(&huart2,Uart2RXBuffer.buffer,Uart2RXBuffer.available);
+			toTransmit = Uart2RXBuffer.available;
+			HAL_UART_Transmit_IT(&huart2,Uart2RXBuffer.buffer,toTransmit);
+			Uart2RXBuffer.available -= toTransmit;
 		}*/
 	}
   /* USER CODE END 3 */
@@ -378,8 +390,23 @@ static void MX_GPIO_Init(void)
 
 }
 
-/* USER CODE BEGIN 4 */
 
+/* USER CODE BEGIN 4 */
+int Uart2PutC(int Ch, FILE *stream){
+	return 0;
+}
+int Uart2GetC(FILE *stream){
+	return 0;
+}
+int UartSendBuffer(UART_HandleTypeDef *uartHand,uint8_t *buffer,int count ,RingBuffer_t *ringBuf){
+	if (HAL_UART_Transmit_IT(uartHand,buffer,count)== HAL_BUSY){
+		//busy with TX put data on ring buffer
+		RingBufferWrite(ringBuf,buffer,count);
+		return -1;//TODO better error code handling
+	}
+
+	return 0;
+}
 /* USER CODE END 4 */
 
 /**

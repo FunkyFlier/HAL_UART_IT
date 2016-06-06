@@ -38,7 +38,8 @@
 /* USER CODE BEGIN 0 */
 #include "RingBuffer.h"
 extern uint8_t ISRBuffer[1];
-//extern RingBuffer_t Uart2RXBuffer;
+extern RingBuffer_t Uart2RXBuffer;
+extern RingBuffer_t Uart2TXBuffer;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -94,16 +95,25 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 }
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	//to do handler for buffer or stream
+	//todo check handler to use multiple uarts
+	//todo handler for buffer or stream
 	HAL_GPIO_TogglePin(LD6_GPIO_Port, LD6_Pin);
 	__HAL_UART_FLUSH_DRREGISTER(&huart2);
-	//to do status handling for ring buffer
-	//RingBufferWrite(&Uart2RXBuffer,ISRBuffer,1);
-	HAL_UART_Transmit_IT(&huart2, (uint8_t *) ISRBuffer, 1);
+	//todo status handling for ring buffer
+	RingBufferWrite(&Uart2RXBuffer,ISRBuffer,1);
 	if (HAL_UART_Receive_IT(&huart2, (uint8_t *) ISRBuffer, 1) != HAL_OK) {
 		printf("uart was not enabled\n");
 	}
 }
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+	HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
+	if (Uart2TXBuffer.available > 0){
+		HAL_UART_Transmit_IT(&huart2,Uart2RXBuffer.buffer,Uart2TXBuffer.available);
+		Uart2TXBuffer.available = 0;
+	}
+}
+
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 
 	printf("uart error: %lu\n", huart->ErrorCode);

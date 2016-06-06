@@ -24,6 +24,7 @@ int RingBufferWrite(RingBuffer_t *rb,uint8_t *in,int count){
 		rb->writeIdx = 0;
 		memcpy(&rb->buffer[rb->writeIdx],in,count);
 		rb->writeIdx = count - 1;
+		rb->available = count;
 	}else{
 		//add data to buffer
 		if (rb->writeIdx + count < rb->size){
@@ -45,13 +46,7 @@ int RingBufferWrite(RingBuffer_t *rb,uint8_t *in,int count){
 			rb->available = rb->size;
 			return 2;
 		}else{
-			rb->available =+ count;
-			//update available//to do double check
-			/*if (rb->writeIdx > rb->readIdx){
-				rb->available = rb->writeIdx - rb->readIdx + 1;
-			}else{
-				rb->available = rb->size - rb->readIdx + rb->writeIdx + 1;
-			}*/
+			rb->available += count;
 		}
 	}
 
