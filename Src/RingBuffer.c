@@ -5,8 +5,8 @@
  *      Author: work
  */
 #include "RingBuffer.h"
-
-void RingBuffer_create(RingBuffer_t *rb,uint8_t *buffer ,int sizeOfBuffer){
+//to do status codes to defines
+void RingBufferCreate(RingBuffer_t *rb,uint8_t *buffer ,int sizeOfBuffer){
 	rb->buffer = buffer;
 	rb->size = sizeOfBuffer;
 	rb->readIdx = 0;
@@ -14,15 +14,16 @@ void RingBuffer_create(RingBuffer_t *rb,uint8_t *buffer ,int sizeOfBuffer){
 	rb->available = 0;
 }
 
-int RingBuffer_write(RingBuffer_t *rb,char *in,int count){
+int RingBufferWrite(RingBuffer_t *rb,uint8_t *in,int count){
 	//check if the count is over the buffer size
 	if (count > rb->size){
 			return 1;
 	}
 	if (rb->available == 0){
 		rb->readIdx = 0;
-		rb->writeIdx = count - 1;
+		rb->writeIdx = 0;
 		memcpy(&rb->buffer[rb->writeIdx],in,count);
+		rb->writeIdx = count - 1;
 	}else{
 		//add data to buffer
 		if (rb->writeIdx + count < rb->size){
@@ -41,41 +42,48 @@ int RingBuffer_write(RingBuffer_t *rb,char *in,int count){
 			if (rb->readIdx == rb->size){
 				rb->readIdx = 0;
 			}
+			rb->available = rb->size;
 			return 2;
 		}else{
-			//update available
-			if (rb->writeIdx > rb->readIdx){
+			rb->available =+ count;
+			//update available//to do double check
+			/*if (rb->writeIdx > rb->readIdx){
 				rb->available = rb->writeIdx - rb->readIdx + 1;
 			}else{
 				rb->available = rb->size - rb->readIdx + rb->writeIdx + 1;
-			}
+			}*/
 		}
 	}
 
 	return 0;
 
 }
+//error returns negative
+//no error returns zero or number bytes out
+int RingBufferRead(RingBuffer_t *rb,uint8_t *out,int count){
 
-int RingBuffer_read(RingBuffer_t *rb,char *out,int count){
 	if (count > rb->available){
-			return 1;
+		return 1;
 	}
-//to do fix wrap handling
-	/*if (rb->readIdx + count < rb->writeIdx){
+	if (rb->available == 0){
+		return 2;
+	}
+	if (rb->readIdx < rb->writeIdx){
 		memcpy(out,&rb->buffer[rb->readIdx],count);
 		rb->readIdx += count;
+		rb->available -= count;
 	}else{
 		size_t part = rb->size - rb->readIdx ;
 		memcpy(out,&rb->buffer[rb->readIdx],  part);
 		memcpy(out + part, rb->buffer, count - part);
 		rb->readIdx = count - part - 1;
+		rb->available -= count;
 	}
-	if (count == rb->available){
-		rb->available = 0;
+	if (rb->available == 0){
 		rb->readIdx = 0;
 		rb->writeIdx = 0;
-		return 2;
-	}*/
+	}
+
 
 	return 0;
 }

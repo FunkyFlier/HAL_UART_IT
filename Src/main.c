@@ -64,8 +64,13 @@ extern void initialise_monitor_handles(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+uint8_t ISRBuffer[1];
+#define UART_BUF_SIZE 128
+uint8_t UART2_RX_BUF[UART_BUF_SIZE];
+uint8_t UART2_TX_BUF[UART_BUF_SIZE];
+RingBuffer_t Uart2RXBuffer;
+//RingBuffer_t UART2TXBuffer;
 
-uint8_t buffer[1];
 //FILE uart2_stream = FDEV_SETUP_STREAM()
 
 /* USER CODE END 0 */
@@ -94,7 +99,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	HAL_TIM_Base_Start_IT(&htim2);
 	HAL_GPIO_WritePin(LD6_GPIO_Port,LD6_Pin,0);
-	if (HAL_UART_Receive_IT(&huart2, (uint8_t *) buffer, 1) != HAL_OK) {
+	RingBufferCreate(&Uart2RXBuffer,UART2_RX_BUF,UART_BUF_SIZE);
+	if (HAL_UART_Receive_IT(&huart2, (uint8_t *) ISRBuffer, 1) != HAL_OK) {
 		while (1) {
 			HAL_GPIO_TogglePin(LD6_GPIO_Port, LD6_Pin);
 			HAL_Delay(500);
@@ -110,6 +116,9 @@ int main(void)
   /* USER CODE BEGIN 3 */
 		HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 		HAL_Delay(500);
+		/*if (Uart2RXBuffer.available > 0){
+			HAL_UART_Transmit_IT(&huart2,Uart2RXBuffer.buffer,Uart2RXBuffer.available);
+		}*/
 	}
   /* USER CODE END 3 */
 
