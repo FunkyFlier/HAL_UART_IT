@@ -13,11 +13,20 @@ void RingBufferCreate(RingBuffer_t *rb,uint8_t *buffer ,int sizeOfBuffer){
 	rb->writeIdx = 0;
 	rb->available = 0;
 }
+enum RingBufferWriteReturns{
+	RB_WRITE_ERR = -1,
+	RB_WRITE_OK = 0,
+	RB_WRITE_OVERRUN = 1
 
+};
+enum RingBufferReadReturns{
+	RB_READ_ERR = -1,
+	RB_READ_OK = 0
+};
 int RingBufferWrite(RingBuffer_t *rb,uint8_t *in,int count){
-	//check if the count is over the buffer size
+
 	if (count > rb->size){
-			return 1;
+			return RB_WRITE_ERR;
 	}
 	if (rb->available == 0){
 		rb->readIdx = 0;
@@ -44,25 +53,22 @@ int RingBufferWrite(RingBuffer_t *rb,uint8_t *in,int count){
 				rb->readIdx = 0;
 			}
 			rb->available = rb->size;
-			return 2;
+			return RB_WRITE_OVERRUN;
 		}else{
 			rb->available += count;
 		}
 	}
 
-	return 0;
+	return RB_WRITE_OK;
 
 }
-//error returns negative
-//no error returns zero or number bytes out
+
 int RingBufferRead(RingBuffer_t *rb,uint8_t *out,int count){
 
-	if (count > rb->available){
-		return 1;
+	if (count > rb->available || rb->available == 0){
+		return RB_READ_ERR;
 	}
-	if (rb->available == 0){
-		return 2;
-	}
+
 	if (rb->readIdx < rb->writeIdx){
 		memcpy(out,&rb->buffer[rb->readIdx],count);
 		rb->readIdx += count;
@@ -80,7 +86,7 @@ int RingBufferRead(RingBuffer_t *rb,uint8_t *out,int count){
 	}
 
 
-	return 0;
+	return RB_READ_OK;
 }
 
 

@@ -12,9 +12,8 @@
 #include <stddef.h>//size_t
 #include <string.h> // memcpy
 #include <stdlib.h> //realloc
-#include <stdbool.h>
 
-typedef struct {
+typedef volatile struct {
 	uint32_t readIdx;
 	uint32_t writeIdx;
 	uint8_t* buffer;
@@ -23,6 +22,8 @@ typedef struct {
 
 
 } RingBuffer_t;
+
+
 
 void RingBufferCreate(RingBuffer_t*,uint8_t*,int);
 

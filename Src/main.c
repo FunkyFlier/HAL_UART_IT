@@ -38,6 +38,7 @@
 #include <stddef.h>
 #include <string.h> // memcpy
 #include <stdlib.h> //realloc
+#include <UART.h>
 #include "RingBuffer.h"
 /* USER CODE END Includes */
 
@@ -74,8 +75,6 @@ uint8_t UART2_TX_BUF[UART_BUF_SIZE];
 RingBuffer_t Uart2RXBuffer;
 RingBuffer_t Uart2TXBuffer;
 
-//FILE uart2_stream = FDEV_SETUP_STREAM()
-
 /* USER CODE END 0 */
 
 int main(void)
@@ -92,7 +91,6 @@ int main(void)
 
   /* Configure the system clock */
   SystemClock_Config();
-
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_TIM2_Init();
