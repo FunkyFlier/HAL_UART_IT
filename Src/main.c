@@ -41,6 +41,19 @@
 #include <UART.h>
 #include "RingBuffer.h"
 #include "defines.h"
+/*
+ * todo tests
+ * ring buffer wrap and over run conditions
+ * maximum speed loop back of data far exceeding buffer sizes
+ * todo improvements
+ * ringbuffer handling all done behind the scenes in UART.h
+ * error code handling ring and uart
+ * return bytes read written / request more bytes than are available?
+ * wrapper function for ring buffer so everything is handled via UART.h
+ * function call to zero ring buffers
+ * todo general
+ * UART.h support DMA transfers
+ */
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -393,7 +406,7 @@ int UartSendBuffer(UART_HandleTypeDef *uartHand,uint8_t *buffer,int count ,RingB
 	if (HAL_UART_Transmit_IT(uartHand,buffer,count)== HAL_BUSY){
 		//busy with TX put data on ring buffer
 		RingBufferWrite(ringBuf,buffer,count);
-		return -1;//TODO better error code handling
+		return -1;
 	}
 
 	return 0;

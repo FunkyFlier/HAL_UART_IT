@@ -115,7 +115,6 @@ void UARTSetup(UART_STRUCT* uartS, UART_HandleTypeDef* uartH,
 //byte and buffer IO
 int UARTWriteByte(UART_STRUCT* uartS, uint8_t* buff) {
 	if (HAL_UART_Transmit_IT(uartS->uartHandler, buff, 1) == HAL_BUSY) {
-		//todo return error based on the ring buffer error returns
 		RingBufferWrite(uartS->txBuffer, buff, 1);
 		return -1;
 	}

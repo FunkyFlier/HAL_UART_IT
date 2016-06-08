@@ -12,7 +12,6 @@
 #include <stddef.h>//size_t
 #include <string.h> // memcpy
 #include <stdlib.h> //realloc
-//todo ring buffer read return bytes read?
 typedef volatile struct {
 	uint32_t readIdx;
 	uint32_t writeIdx;

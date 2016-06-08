@@ -15,8 +15,7 @@
 
 //remove
 #include <stdbool.h>
-//todo wrapper function for ring buffer so everything is handled via UART.h
-//todo function call to zero ring buffers
+
 /*
  * Definitions to configure UART
  */
