@@ -7,6 +7,8 @@
 
 #include <UART.h>
 
+uint8_t testMessage2[] = "halfcall back\r\n";
+
 void UARTSetup(UART_STRUCT*, UART_HandleTypeDef*, volatile RingBuffer_t*,
 		volatile RingBuffer_t*);
 
@@ -155,7 +157,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 #ifdef USART2
 	case (uint32_t) USART2:
 #ifdef UART_2
-		HAL_GPIO_TogglePin(LD6_GPIO_Port, LD6_Pin);
+		//HAL_GPIO_TogglePin(LD6_GPIO_Port, LD6_Pin);
 		RingBufferWrite(UART_2_STRUCT.rxBuffer, ISRBuffer_2, 1);
 		__HAL_UART_FLUSH_DRREGISTER(huart);
 		if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler,
@@ -209,6 +211,12 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 	//will be implimented similiarly to the RX call back
 	//this will check to see if the output ring buffer has any data in it
 	//and if so transmit the data which was written to the buffer while the previous data was transmitting
+	static bool messageOut = false;
+	if (messageOut == false){
+		messageOut = true;
+		HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
+		UARTWriteBuffer(&UART_2_STRUCT,testMessage2,sizeof(testMessage2)-1);
+	}
 	switch ((uint32_t) huart->Instance) {
 #ifdef USART1
 	case (uint32_t) USART1:
@@ -219,7 +227,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 #ifdef USART2
 	case (uint32_t) USART2:
 #ifdef UART_2
-		HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
+		//HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
 		if (UART_2_STRUCT.txBuffer->available > 0) {
 			HAL_UART_Transmit_IT(UART_2_STRUCT.uartHandler,
 					UART_2_STRUCT.txBuffer->buffer,
@@ -267,7 +275,16 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 #endif//USART8
 	}
 }
-
+void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart)
+{
+	//only called for DMA
+	static bool messageOut = false;
+	if (messageOut == false){
+		messageOut = true;
+		HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
+		//UARTWriteBuffer(&UART_2_STRUCT,testMessage2,sizeof(testMessage2)-1);
+	}
+}
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 #ifdef DEBUG_TO_CONSOLE
 	printf("uart error: %lu\n", huart->ErrorCode);

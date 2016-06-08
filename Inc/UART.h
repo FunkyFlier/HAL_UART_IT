@@ -12,6 +12,9 @@
 #include "RingBuffer.h"
 #include "stdio.h"
 #include "defines.h"
+
+//remove
+#include <stdbool.h>
 //todo wrapper function for ring buffer so everything is handled via UART.h
 //todo function call to zero ring buffers
 /*
@@ -115,7 +118,6 @@ extern UART_HandleTypeDef huart8;
 #endif
 
 void UARTInit();
-//void UARTSetup(UART_STRUCT* ,UART_HandleTypeDef* ,volatile RingBuffer_t* ,volatile RingBuffer_t*) ;
 
 int UARTWriteByte(UART_STRUCT*,uint8_t*);
 int UARTWriteBuffer(UART_STRUCT*,uint8_t*,int);

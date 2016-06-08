@@ -51,13 +51,13 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef huart1;
+/*UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart5;
 UART_HandleTypeDef huart6;
 UART_HandleTypeDef huart7;
-UART_HandleTypeDef huart8;
+UART_HandleTypeDef huart8;*/
 
 /* USER CODE END PV */
 
@@ -74,19 +74,7 @@ static void MX_USART2_UART_Init(void);
 extern void initialise_monitor_handles(void);
 #endif
 uint8_t loopBackBuffer[128];
-uint8_t testMessage[] = "does this work\r\n";
-/*int Uart2PutC(int, FILE*);
-int Uart2GetC(FILE*);
-int UartSendBuffer(UART_HandleTypeDef*,uint8_t*,int ,RingBuffer_t*);*/
-/* USER CODE END PFP */
-
-/* USER CODE BEGIN 0 */
-/*uint8_t ISRBuffer[1];
-#define UART_BUF_SIZE 128
-uint8_t UART2_RX_BUF[UART_BUF_SIZE];
-uint8_t UART2_TX_BUF[UART_BUF_SIZE];
-RingBuffer_t Uart2RXBuffer;
-RingBuffer_t Uart2TXBuffer;*/
+uint8_t testMessage1[] = "does this work\r\n";
 
 /* USER CODE END 0 */
 
@@ -112,16 +100,8 @@ int main(void)
 	//HAL_TIM_Base_Start_IT(&htim2);
 	HAL_GPIO_WritePin(LD6_GPIO_Port,LD6_Pin,0);
 	UARTInit();
-	UARTWriteBuffer(&UART_2_STRUCT,testMessage,sizeof(testMessage)-1);
-	/*
-	RingBufferCreate(&Uart2RXBuffer,UART2_RX_BUF,UART_BUF_SIZE);
-	RingBufferCreate(&Uart2TXBuffer,UART2_TX_BUF,UART_BUF_SIZE);
-	if (HAL_UART_Receive_IT(&huart2, (uint8_t *) ISRBuffer, 1) != HAL_OK) {
-		while (1) {
-			HAL_GPIO_TogglePin(LD6_GPIO_Port, LD6_Pin);
-			HAL_Delay(500);
-		}
-	}*/
+	UARTWriteBuffer(&UART_2_STRUCT,testMessage1,sizeof(testMessage1)-1);
+
 #ifdef DEBUG_TO_CONSOLE
 	initialise_monitor_handles();
 	printf("start\n");
@@ -140,17 +120,7 @@ int main(void)
 			RingBufferRead(UART_2_STRUCT.rxBuffer,loopBackBuffer,UART_2_STRUCT.rxBuffer->available);
 			UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,toTransmit);
 		}
-		//printf("%u\n",Uart2RXBuffer.available);
-		/*if (Uart2RXBuffer.available > 0){
-			toTransmit = Uart2RXBuffer.available;
-			UartSendBuffer(&huart2,Uart2RXBuffer.buffer,Uart2RXBuffer.available,&Uart2TXBuffer);
-			Uart2RXBuffer.available -= toTransmit;
-		}*/
-		/*if (Uart2RXBuffer.available > 0){
-			toTransmit = Uart2RXBuffer.available;
-			HAL_UART_Transmit_IT(&huart2,Uart2RXBuffer.buffer,toTransmit);
-			Uart2RXBuffer.available -= toTransmit;
-		}*/
+
 	}
   /* USER CODE END 3 */
 
