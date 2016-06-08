@@ -13,16 +13,7 @@ void RingBufferCreate(RingBuffer_t *rb,uint8_t *buffer ,int sizeOfBuffer){
 	rb->writeIdx = 0;
 	rb->available = 0;
 }
-enum RingBufferWriteReturns{
-	RB_WRITE_ERR = -1,
-	RB_WRITE_OK = 0,
-	RB_WRITE_OVERRUN = 1
 
-};
-enum RingBufferReadReturns{
-	RB_READ_ERR = -1,
-	RB_READ_OK = 0
-};
 int RingBufferWrite(RingBuffer_t *rb,uint8_t *in,int count){
 
 	if (count > rb->size){

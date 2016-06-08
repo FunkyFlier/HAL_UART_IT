@@ -97,9 +97,5 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 
 
-/*void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
-
-	printf("uart error: %lu\n", huart->ErrorCode);
-}*/
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

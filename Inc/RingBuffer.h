@@ -12,7 +12,7 @@
 #include <stddef.h>//size_t
 #include <string.h> // memcpy
 #include <stdlib.h> //realloc
-
+//todo ring buffer read return bytes read?
 typedef volatile struct {
 	uint32_t readIdx;
 	uint32_t writeIdx;
@@ -23,7 +23,16 @@ typedef volatile struct {
 
 } RingBuffer_t;
 
+enum RingBufferWriteReturns{
+	RB_WRITE_ERR = -1,
+	RB_WRITE_OK = 0,
+	RB_WRITE_OVERRUN = 1
 
+};
+enum RingBufferReadReturns{
+	RB_READ_ERR = -1,
+	RB_READ_OK = 0
+};
 
 void RingBufferCreate(RingBuffer_t*,uint8_t*,int);
 
