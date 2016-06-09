@@ -60,7 +60,7 @@ int RingBufferRead(RingBuffer_t *rb, uint8_t *out, int count) {
 	}
 
 	if ((rb->readIdx < rb->writeIdx)
-			|| ((rb->readIdx > rb->writeIdx) && ((rb->size - rb->readIdx) >= count))) {
+			|| ((rb->readIdx > rb->writeIdx) && ((rb->size - rb->readIdx) >= count)) || rb->readIdx == rb->writeIdx) {
 		//no wrap
 		memcpy(out, &rb->buffer[rb->readIdx], count);
 		rb->readIdx += count;

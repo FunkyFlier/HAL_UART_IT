@@ -13,7 +13,7 @@ void UARTSetup(UART_STRUCT*, UART_HandleTypeDef*, volatile RingBuffer_t*,
 		volatile RingBuffer_t*);
 
 void UARTInit() {
-
+	printf("uartinit\n");
 #ifdef UART_1
 	RingBufferCreate(&UART_1_RX_RING,UART_1_RX_BUFFER,(int)sizeof(UART_1_RX_BUFFER));
 	RingBufferCreate(&UART_1_TX_RING,UART_1_TX_BUFFER,(int)sizeof(UART_1_TX_BUFFER));
@@ -31,6 +31,7 @@ void UARTInit() {
 	UARTSetup(&UART_2_STRUCT, &huart2, &UART_2_RX_RING, &UART_2_TX_RING);
 	if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler, (uint8_t *) ISRBuffer_2,
 			1) != HAL_OK) {
+		//HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, 1);
 #ifdef DEBUG_TO_CONSOLE
 		printf("uart2 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
@@ -210,12 +211,12 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 	//will be implimented similiarly to the RX call back
 	//this will check to see if the output ring buffer has any data in it
 	//and if so transmit the data which was written to the buffer while the previous data was transmitting
-	static bool messageOut = false;
+	/*static bool messageOut = false;
 	if (messageOut == false){
 		messageOut = true;
 		HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
 		UARTWriteBuffer(&UART_2_STRUCT,testMessage2,sizeof(testMessage2)-1);
-	}
+	}*/
 	switch ((uint32_t) huart->Instance) {
 #ifdef USART1
 	case (uint32_t) USART1:
@@ -274,7 +275,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 #endif//USART8
 	}
 }
-void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart)
+/*void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart)
 {
 	//only called for DMA
 	static bool messageOut = false;
@@ -283,7 +284,7 @@ void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart)
 		HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
 		//UARTWriteBuffer(&UART_2_STRUCT,testMessage2,sizeof(testMessage2)-1);
 	}
-}
+}*/
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 #ifdef DEBUG_TO_CONSOLE
 	printf("uart error: %lu\n", huart->ErrorCode);
