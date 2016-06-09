@@ -43,7 +43,6 @@
 #include "defines.h"
 /*
  * todo tests
- * ring buffer wrap and over run conditions
  * maximum speed loop back of data far exceeding buffer sizes
  * todo improvements
  * ringbuffer handling all done behind the scenes in UART.h
