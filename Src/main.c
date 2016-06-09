@@ -125,7 +125,7 @@ int main(void) {
 	initialise_monitor_handles();
 	printf("start\n");
 #endif
-	RingBufferTest();
+	//RingBufferTest();
 	/* USER CODE END 2 */
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
@@ -409,15 +409,14 @@ void RingBufferTest() {
 	//overrun condition
 	RingBufferWrite(&testRingBuff,largeTestBuffer,120);
 	returnCode = RingBufferWrite(&testRingBuff,largeTestBuffer,20);
-	printf("code: %i\n",returnCode);
 	testRingBuff.readIdx = 121;
 	testRingBuff.writeIdx = 120;
-	returnCode = RingBufferRead(&testRingBuff,readBuffer,10);
-	//returnCode = RingBufferRead(&testRingBuff,readBuffer[100],100);
 	printf("code: %i\n",returnCode);
-	testRingBuff.available = 0;
-	returnCode = 0;
-	return;
+	returnCode = RingBufferRead(&testRingBuff,readBuffer,10);
+	printf("code: %i\n",returnCode);
+	returnCode = RingBufferRead(&testRingBuff,readBuffer,119);
+	printf("code: %i\n",returnCode);
+
 }
 /* USER CODE END 4 */
 
