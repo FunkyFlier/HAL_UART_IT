@@ -34,6 +34,7 @@ typedef struct{
 	UART_HandleTypeDef *uartHandler;
 	volatile RingBuffer_t *rxBuffer;
 	volatile RingBuffer_t *txBuffer;
+	bool busy;
 }UART_STRUCT;
 
 #ifdef UART_1
@@ -122,6 +123,7 @@ int UARTWriteByte(UART_STRUCT*,uint8_t*);
 int UARTWriteBuffer(UART_STRUCT*,uint8_t*,int);
 int UARTGetByte(UART_STRUCT*,uint8_t*);
 int UARTGetBuffer(UART_STRUCT*,uint8_t*,int);
+int UARTAvailabe(UART_STRUCT*);
 /*
 #ifdef UART_STREAMING
 FILE* UART_STREAM_CONFIG();

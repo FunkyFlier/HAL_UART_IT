@@ -43,14 +43,22 @@
 #include "defines.h"
 /*
  * todo tests
- * ring buffer wrap and over run conditions
- * maximum speed loop back of data far exceeding buffer sizes
+ * maximum speed loop back of data far exceeding buffer sizes works with an *
  * todo improvements
- * ringbuffer handling all done behind the scenes in UART.h
- * error code handling ring and uart
+ * error code handling ring and uart - improve
  * return bytes read written / request more bytes than are available?
- * wrapper function for ring buffer so everything is handled via UART.h
+ * wrapper function for ring buffer so everything is handled via UART.h / just move it to UART.h?
  * function call to zero ring buffers
+ * The problem with real term has been the timing of the bytes in and out.
+ * There are varying delays and too short line idle times which are causing the misread by realterm
+ * This behavior should be expected in a variety of different systems
+ * To solve this the data will be output in bursts
+ * To do so there will be two conditions
+ * 1 - buffer limit reached
+ * 2 - an amount of time lapsed since the last byte into the buffer
+ * to achieve number two and keep the code non blocking a timer interrupt will be used
+ * To this end a library will be made similarly to UART.h which will interface with the HAL
+ * so that configuration of the timer behavior can be configured through defines
  * todo general
  * UART.h support DMA transfers
  */
@@ -76,6 +84,7 @@ uint8_t testMessage1[] = "does this work\r\n";
 uint8_t largeTestBuffer[130];
 uint8_t testBuffer[128];
 RingBuffer_t testRingBuff;
+int inByteCount,outByteCount;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -90,7 +99,7 @@ static void MX_USART2_UART_Init(void);
 #ifdef DEBUG_TO_CONSOLE
 extern void initialise_monitor_handles(void);
 #endif
-void RingBufferTest();
+//void RingBufferTest();
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -101,12 +110,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	//fill large test buffer
-	for (int i = 0; i < 130; i++) {
-		largeTestBuffer[i] = (uint8_t)i;
-	}
-	int toTransmit;
-	RingBufferCreate(&testRingBuff,testBuffer,(int)sizeof(testBuffer));
+
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -129,7 +133,6 @@ int main(void)
 	HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, 0);
 	HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, 0);
 #ifdef DEBUG_TO_CONSOLE
-	//setbuf(stdout, NULL);
 	initialise_monitor_handles();
 	printf("start\n");
 #endif
@@ -137,7 +140,6 @@ int main(void)
 	UARTWriteBuffer(&UART_2_STRUCT, testMessage1, sizeof(testMessage1) - 1);
 
 
-	//RingBufferTest();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -146,13 +148,15 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-		//HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-		//HAL_Delay(500);
-		if (UART_2_STRUCT.rxBuffer->available > 0) {
-			toTransmit = UART_2_STRUCT.rxBuffer->available;
-			RingBufferRead(UART_2_STRUCT.rxBuffer, loopBackBuffer,
-					UART_2_STRUCT.rxBuffer->available);
-			UARTWriteBuffer(&UART_2_STRUCT, loopBackBuffer, toTransmit);
+		//
+		if (UARTAvailabe(&UART_2_STRUCT) > 0){
+			UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,UARTGetBuffer(&UART_2_STRUCT,loopBackBuffer,UARTAvailabe(&UART_2_STRUCT)));
+		}
+
+		if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET){
+			printf("in: %i\nout: %i\n",inByteCount , outByteCount);
+			inByteCount = 0;
+			outByteCount = 0;
 		}
 
 	}

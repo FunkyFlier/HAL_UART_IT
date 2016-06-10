@@ -7,13 +7,14 @@
 
 #include <UART.h>
 
-uint8_t testMessage2[] = "halfcall back\r\n";
-
+extern int inByteCount,outByteCount;
 void UARTSetup(UART_STRUCT*, UART_HandleTypeDef*, volatile RingBuffer_t*,
 		volatile RingBuffer_t*);
 
 void UARTInit() {
 	printf("uartinit\n");
+	inByteCount = 0;
+	outByteCount = 0;
 #ifdef UART_1
 	RingBufferCreate(&UART_1_RX_RING,UART_1_RX_BUFFER,(int)sizeof(UART_1_RX_BUFFER));
 	RingBufferCreate(&UART_1_TX_RING,UART_1_TX_BUFFER,(int)sizeof(UART_1_TX_BUFFER));
@@ -110,18 +111,23 @@ void UARTSetup(UART_STRUCT* uartS, UART_HandleTypeDef* uartH,
 	uartS->uartHandler = uartH;
 	uartS->rxBuffer = rbRX;
 	uartS->txBuffer = rbTX;
+	uartS->busy = false;
 }
 //end setup
 
 //byte and buffer IO
 int UARTWriteByte(UART_STRUCT* uartS, uint8_t* buff) {
+
 	if (HAL_UART_Transmit_IT(uartS->uartHandler, buff, 1) == HAL_BUSY) {
-		RingBufferWrite(uartS->txBuffer, buff, 1);
-		return -1;
+		return RingBufferWrite(uartS->txBuffer, buff, 1);
 	}
 	return 0;
 }
 int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
+	if (n < 0){
+		printf("Wfound <0\n");
+	}
+	outByteCount += n;
 	if (HAL_UART_Transmit_IT(uartS->uartHandler, buff, n) == HAL_BUSY) {
 		RingBufferWrite(uartS->txBuffer, buff, n);
 		return -1;
@@ -136,17 +142,31 @@ int UARTGetByte(UART_STRUCT* uartS, uint8_t* buff) {
 	return 0;
 }
 int UARTGetBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
-	if (uartS->rxBuffer->available == 0 || uartS->rxBuffer->available < n) {
+	if (n < 0){
+		printf("Rfound <0\n");
+	}
+	if (RingBufferAvailable(uartS->rxBuffer) == 0) {
+		printf("Gzero\n");
 		return -1;
 	}
+	if (RingBufferAvailable(uartS->rxBuffer) < n){
+		printf("wrong av\n");
+		n = RingBufferAvailable(uartS->rxBuffer);
+	}
+	return RingBufferRead(uartS->rxBuffer, buff, n);
 
-	RingBufferRead(uartS->rxBuffer, buff, n);
-	return 0;
 }
+int UARTAvailabe(UART_STRUCT* uartS){
+	return RingBufferAvailable(uartS->rxBuffer);
+}
+/*int UARTGetBufferAll(UART_STRUCT* uartS, uint8_t* buff){
+
+}*/
 //end byte and buffer IO
 //ISR callbacks
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	//this function puts the recieved byte into the correct ring buffer
+
+	//this function puts the received byte into the correct ring buffer
 	switch ((uint32_t) huart->Instance) {
 #ifdef USART1
 	case (uint32_t) USART1:
@@ -159,6 +179,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 #ifdef UART_2
 		//HAL_GPIO_TogglePin(LD6_GPIO_Port, LD6_Pin);
 		RingBufferWrite(UART_2_STRUCT.rxBuffer, ISRBuffer_2, 1);
+		inByteCount++;
 		__HAL_UART_FLUSH_DRREGISTER(huart);
 		if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler,
 				(uint8_t *) ISRBuffer_2, 1) != HAL_OK) {
@@ -208,7 +229,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
-	//will be implimented similiarly to the RX call back
+
+
+	//will be implemented similarly to the RX call back
 	//this will check to see if the output ring buffer has any data in it
 	//and if so transmit the data which was written to the buffer while the previous data was transmitting
 	/*static bool messageOut = false;
@@ -228,6 +251,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 	case (uint32_t) USART2:
 #ifdef UART_2
 		//HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
+
 		if (UART_2_STRUCT.txBuffer->available > 0) {
 			HAL_UART_Transmit_IT(UART_2_STRUCT.uartHandler,
 					UART_2_STRUCT.txBuffer->buffer,

@@ -12,13 +12,19 @@ void RingBufferCreate(RingBuffer_t *rb, uint8_t *buffer, int sizeOfBuffer) {
 	rb->readIdx = 0;
 	rb->writeIdx = 0;
 	rb->available = 0;
+	rb->locked = false;
 }
-
+/*
+ * These functions will returns -1 on error or number of bytes written
+ * Overrun on write returns the size of the buffer + 1
+ */
 int RingBufferWrite(RingBuffer_t *rb, uint8_t *in, int count) {
-
 	if (count > rb->size) {
-		return RB_WRITE_ERR;
+		return -1;
 	}
+	while (rb->locked == true) {
+	}
+	rb->locked = true;
 	if (rb->available == 0) {
 		rb->readIdx = 0;
 		rb->writeIdx = 0;
@@ -26,13 +32,10 @@ int RingBufferWrite(RingBuffer_t *rb, uint8_t *in, int count) {
 		rb->writeIdx = count - 1;
 		rb->available = count;
 	} else {
-		//add data to buffer
 		if (rb->writeIdx + count < rb->size) {
-			//copy
 			memcpy(&rb->buffer[rb->writeIdx + 1], in, count);
 			rb->writeIdx += count;
 		} else {
-			//wrap copy
 			size_t part = rb->size - rb->writeIdx - 1;
 			memcpy(&rb->buffer[rb->writeIdx + 1], in, part);
 			memcpy(rb->buffer, in + part, count - part);
@@ -44,29 +47,36 @@ int RingBufferWrite(RingBuffer_t *rb, uint8_t *in, int count) {
 				rb->readIdx = 0;
 			}
 			rb->available = rb->size;
-			return RB_WRITE_OVERRUN;
+			rb->locked = false;
+			return rb->size + 1;
 		} else {
 			rb->available += count;
 		}
 	}
-
-	return RB_WRITE_OK;
+	rb->locked = false;
+	return count;
 
 }
 
 int RingBufferRead(RingBuffer_t *rb, uint8_t *out, int count) {
-	if (count > rb->available || rb->available == 0) {
-		return RB_READ_ERR;
+	while (rb->locked == true) {
+	}
+	if (rb->available == 0) {
+		return -1;
 	}
 
+	rb->locked = true;
+	if (count > rb->available){
+		count = rb->available;
+	}
 	if ((rb->readIdx < rb->writeIdx)
-			|| ((rb->readIdx > rb->writeIdx) && ((rb->size - rb->readIdx) >= count)) || rb->readIdx == rb->writeIdx) {
-		//no wrap
+			|| ((rb->readIdx > rb->writeIdx)
+					&& ((rb->size - rb->readIdx) >= count))
+			|| rb->readIdx == rb->writeIdx) {
 		memcpy(out, &rb->buffer[rb->readIdx], count);
 		rb->readIdx += count;
 		rb->available -= count;
 	} else {
-		//wrap required
 		size_t part = rb->size - rb->readIdx;
 		memcpy(out, &rb->buffer[rb->readIdx], part);
 		memcpy(out + part, rb->buffer, count - part);
@@ -77,7 +87,12 @@ int RingBufferRead(RingBuffer_t *rb, uint8_t *out, int count) {
 		rb->readIdx = 0;
 		rb->writeIdx = 0;
 	}
-
-	return RB_READ_OK;
+	rb->locked = false;
+	return count;
+}
+int RingBufferAvailable(RingBuffer_t *rb){
+	while (rb->locked == true) {
+	}
+	return rb->available;
 }
 
