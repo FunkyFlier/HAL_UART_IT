@@ -36,6 +36,7 @@
 #include "stm32f4xx_it.h"
 
 /* USER CODE BEGIN 0 */
+extern uint32_t msCount;
 /*#include "RingBuffer.h"
 extern uint8_t ISRBuffer[1];
 extern RingBuffer_t Uart2RXBuffer;
@@ -95,7 +96,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
 
 }
-
+void HAL_SYSTICK_Callback(void)
+{
+	msCount++;
+}
 
 
 /* USER CODE END 1 */

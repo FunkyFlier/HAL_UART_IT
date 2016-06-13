@@ -9,11 +9,9 @@
 #define UART_H_
 
 #include "stm32f4xx_hal.h"
-#include "RingBuffer.h"
+//#include "RingBuffer.h"
 #include "stdio.h"
 #include "defines.h"
-
-//remove
 #include <stdbool.h>
 
 /*
@@ -30,12 +28,21 @@
 //#define UART_6
 //#define UART_7
 //#define UART_8
+typedef volatile struct {
+	uint32_t readIdx;
+	uint32_t writeIdx;
+	uint8_t* buffer;
+	uint32_t size;
+	uint32_t available;
+	bool locked;
+
+} RingBuffer_t;
 typedef struct{
 	UART_HandleTypeDef *uartHandler;
 	volatile RingBuffer_t *rxBuffer;
 	volatile RingBuffer_t *txBuffer;
-	bool busy;
 }UART_STRUCT;
+
 
 #ifdef UART_1
 UART_STRUCT UART_1_STRUCT;

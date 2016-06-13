@@ -6,6 +6,7 @@
  */
 #include "RingBuffer.h"
 //to do status codes to defines
+/*
 void RingBufferCreate(RingBuffer_t *rb, uint8_t *buffer, int sizeOfBuffer) {
 	rb->buffer = buffer;
 	rb->size = sizeOfBuffer;
@@ -14,10 +15,7 @@ void RingBufferCreate(RingBuffer_t *rb, uint8_t *buffer, int sizeOfBuffer) {
 	rb->available = 0;
 	rb->locked = false;
 }
-/*
- * These functions will returns -1 on error or number of bytes written
- * Overrun on write returns the size of the buffer + 1
- */
+
 int RingBufferWrite(RingBuffer_t *rb, uint8_t *in, int count) {
 	if (count > rb->size) {
 		return -1;
@@ -95,4 +93,4 @@ int RingBufferAvailable(RingBuffer_t *rb){
 	}
 	return rb->available;
 }
-
+*/

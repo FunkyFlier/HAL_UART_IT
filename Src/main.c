@@ -39,12 +39,13 @@
 #include <string.h> // memcpy
 #include <stdlib.h> //realloc
 #include <UART.h>
-#include "RingBuffer.h"
+//#include "RingBuffer.h"
 #include "defines.h"
 /*
  * todo tests
  * maximum speed loop back of data far exceeding buffer sizes works with an *
  * todo improvements
+ * below is pointless. Just assemble the packet and send it all at once.
  * error code handling ring and uart - improve
  * return bytes read written / request more bytes than are available?
  * wrapper function for ring buffer so everything is handled via UART.h / just move it to UART.h?
@@ -84,6 +85,7 @@ uint8_t testMessage1[] = "does this work\r\n";
 uint8_t largeTestBuffer[130];
 uint8_t testBuffer[128];
 RingBuffer_t testRingBuff;
+uint32_t msCount;
 int inByteCount,outByteCount;
 /* USER CODE END PV */
 
@@ -110,7 +112,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+	RingBufferCreate(&testRingBuff,testBuffer,128);
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -139,7 +141,7 @@ int main(void)
 	UARTInit();
 	UARTWriteBuffer(&UART_2_STRUCT, testMessage1, sizeof(testMessage1) - 1);
 
-
+	msCount = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -150,9 +152,13 @@ int main(void)
   /* USER CODE BEGIN 3 */
 		//
 		if (UARTAvailabe(&UART_2_STRUCT) > 0){
-			UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,UARTGetBuffer(&UART_2_STRUCT,loopBackBuffer,UARTAvailabe(&UART_2_STRUCT)));
+			RingBufferWrite(&testRingBuff,loopBackBuffer,UARTGetBuffer(&UART_2_STRUCT,loopBackBuffer,UARTAvailabe(&UART_2_STRUCT)));
+			msCount = 0;
+			//UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,UARTGetBuffer(&UART_2_STRUCT,loopBackBuffer,UARTAvailabe(&UART_2_STRUCT)));
 		}
-
+		if (RingBufferAvailable(&testRingBuff) > 60 || (msCount > 100 && RingBufferAvailable(&testRingBuff) != 0)){
+			UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,RingBufferRead(&testRingBuff,loopBackBuffer,RingBufferAvailable(&testRingBuff)));
+		}
 		if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET){
 			printf("in: %i\nout: %i\n",inByteCount , outByteCount);
 			inByteCount = 0;
