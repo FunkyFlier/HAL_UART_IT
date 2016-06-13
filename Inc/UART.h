@@ -12,6 +12,10 @@
 //#include "RingBuffer.h"
 #include "stdio.h"
 #include "defines.h"
+#include <stdint.h>//uint*_t
+#include <stddef.h>//size_t
+#include <string.h> // memcpy
+#include <stdlib.h> //realloc
 #include <stdbool.h>
 
 /*
@@ -35,12 +39,13 @@ typedef volatile struct {
 	uint32_t size;
 	uint32_t available;
 	bool locked;
-
 } RingBuffer_t;
 typedef struct{
 	UART_HandleTypeDef *uartHandler;
 	volatile RingBuffer_t *rxBuffer;
 	volatile RingBuffer_t *txBuffer;
+	uint8_t* ISRBuf;
+	bool transmit;
 }UART_STRUCT;
 
 
@@ -58,6 +63,7 @@ extern UART_HandleTypeDef huart1;
 UART_STRUCT UART_2_STRUCT;
 uint8_t UART_2_RX_BUFFER[UART_RING_BUF_SIZE_RX];
 uint8_t UART_2_TX_BUFFER[UART_RING_BUF_SIZE_TX];
+uint8_t UART_2_TX_TEMP_BUFFER[UART_RING_BUF_SIZE_TX];
 uint8_t ISRBuffer_2[1];
 RingBuffer_t UART_2_RX_RING;
 RingBuffer_t UART_2_TX_RING;
@@ -131,6 +137,16 @@ int UARTWriteBuffer(UART_STRUCT*,uint8_t*,int);
 int UARTGetByte(UART_STRUCT*,uint8_t*);
 int UARTGetBuffer(UART_STRUCT*,uint8_t*,int);
 int UARTAvailabe(UART_STRUCT*);
+void UARTTXCallBackHandler(UART_STRUCT*);
+void UARTRXCallBackHandler(UART_STRUCT*);
+
+void RingBufferCreate(RingBuffer_t*, uint8_t*, int);
+
+int RingBufferWrite(RingBuffer_t*, uint8_t*, int);
+
+int RingBufferRead(RingBuffer_t*, uint8_t*, int);
+
+int RingBufferAvailable(RingBuffer_t*);
 /*
 #ifdef UART_STREAMING
 FILE* UART_STREAM_CONFIG();

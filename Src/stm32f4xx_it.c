@@ -36,7 +36,7 @@
 #include "stm32f4xx_it.h"
 
 /* USER CODE BEGIN 0 */
-extern uint32_t msCount;
+extern uint32_t msCount,uartTimeOutDebugCounter;
 /*#include "RingBuffer.h"
 extern uint8_t ISRBuffer[1];
 extern RingBuffer_t Uart2RXBuffer;
@@ -99,6 +99,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 void HAL_SYSTICK_Callback(void)
 {
 	msCount++;
+	uartTimeOutDebugCounter++;
 }
 
 

@@ -86,6 +86,7 @@ uint8_t largeTestBuffer[130];
 uint8_t testBuffer[128];
 RingBuffer_t testRingBuff;
 uint32_t msCount;
+uint32_t uartTimeOutDebugCounter;
 int inByteCount,outByteCount;
 /* USER CODE END PV */
 
@@ -129,7 +130,7 @@ int main(void)
   MX_USART2_UART_Init();
 
   /* USER CODE BEGIN 2 */
-	//HAL_TIM_Base_Start_IT(&htim2);
+	HAL_TIM_Base_Start_IT(&htim2);
 	HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, 0);
 	HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, 0);
 	HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, 0);
