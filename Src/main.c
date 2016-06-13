@@ -42,6 +42,7 @@
 #include "defines.h"
 /*
  * todo general
+ * fix handling where a byte is received during during get
  * UART.h support DMA transfers
  */
 /* USER CODE END Includes */
@@ -53,13 +54,13 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef huart1;
+/*UART_HandleTypeDef huart1;
  UART_HandleTypeDef huart3;
  UART_HandleTypeDef huart4;
  UART_HandleTypeDef huart5;
  UART_HandleTypeDef huart6;
  UART_HandleTypeDef huart7;
- UART_HandleTypeDef huart8;
+ UART_HandleTypeDef huart8;*/
 uint8_t loopBackBuffer[128];
 uint8_t testMessage1[] = "does this work\r\n";
 
@@ -68,7 +69,7 @@ uint8_t testBuffer[128];
 RingBuffer_t testRingBuff;
 uint32_t msCount;
 uint32_t uartTimeOutDebugCounter;
-int inByteCount,outByteCount;
+int inByteCount,outByteCount,lostByteCount;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -139,13 +140,14 @@ int main(void)
 			RingBufferWrite(&testRingBuff,loopBackBuffer,UARTGetBuffer(&UART_2_STRUCT,loopBackBuffer,UARTAvailabe(&UART_2_STRUCT)));
 			msCount = 0;
 		}
-		if (RingBufferAvailable(&testRingBuff) > 60 || (msCount > 100 && RingBufferAvailable(&testRingBuff) != 0)){
+		/*if (RingBufferAvailable(&testRingBuff) > 20 || (msCount > 100 && RingBufferAvailable(&testRingBuff) != 0)){
 			UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,RingBufferRead(&testRingBuff,loopBackBuffer,RingBufferAvailable(&testRingBuff)));
-		}
+		}*/
 		if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET){
-			printf("in: %i\nout: %i\n",inByteCount , outByteCount);
+			printf("in: %i\nout: %i\nlost: %i\n",inByteCount , outByteCount,lostByteCount);
 			inByteCount = 0;
 			outByteCount = 0;
+			lostByteCount = 0;
 		}
 
 	}
@@ -234,7 +236,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 921600;
+  huart2.Init.BaudRate = 460800;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;

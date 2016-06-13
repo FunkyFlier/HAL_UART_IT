@@ -27,8 +27,8 @@
 //#define UART_7
 //#define UART_8
  */
-#define UART_RING_BUF_SIZE_RX 128
-#define UART_RING_BUF_SIZE_TX 128
+#define UART_RING_BUF_SIZE_RX 256
+#define UART_RING_BUF_SIZE_TX 256
 
 typedef volatile struct {
 	uint32_t readIdx;
@@ -56,7 +56,7 @@ int UARTGetBuffer(UART_STRUCT*, uint8_t*, int);
 int UARTAvailabe(UART_STRUCT*);
 
 void RingBufferCreate(RingBuffer_t*, uint8_t*, int);
-
+int RingBufferWriteByte(RingBuffer_t*, uint8_t*);
 int RingBufferWrite(RingBuffer_t*, uint8_t*, int);
 int RingBufferRead(RingBuffer_t*, uint8_t*, int);
 int RingBufferAvailable(RingBuffer_t*);

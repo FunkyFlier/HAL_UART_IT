@@ -2,13 +2,14 @@
  * UART.c
  *
  *  Created on: Jun 6, 2016
- *      Author: work
+ *      Author: Michael Baker
+ *      Works up to 230400 for loop back
  */
 
 #include <UART.h>
 
 extern int uartTimeOutDebugCounter;
-extern int inByteCount, outByteCount;
+extern int inByteCount, outByteCount,lostByteCount;
 
 void UARTSetup(UART_STRUCT*, UART_HandleTypeDef*, volatile RingBuffer_t*,volatile RingBuffer_t*, uint8_t*);
 
@@ -148,6 +149,8 @@ int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 		}
 		outByteCount += uartS->txBuffer->available;
 		uartS->txBuffer->available = 0;
+		uartS->txBuffer->readIdx = 0;
+		uartS->txBuffer->writeIdx = 0;
 		uartS->txBuffer->locked = false;
 	}
 	return 0;
@@ -169,12 +172,16 @@ int UARTAvailabe(UART_STRUCT* uartS) {
 	return RingBufferAvailable(uartS->rxBuffer);
 }
 void UARTRXCallBackHandler(UART_STRUCT* uartS) {
-	RingBufferWrite(uartS->rxBuffer, uartS->ISRBuf, 1);
+	int debugNum = 0;
+	RingBufferWriteByte(uartS->rxBuffer, uartS->ISRBuf);
 	inByteCount++;
 	__HAL_UART_FLUSH_DRREGISTER(uartS->uartHandler);
+	//debugNum = HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1);
 	if (HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1) != HAL_OK) {
+	//if (debugNum != HAL_OK) {
 #ifdef DEBUG_TO_CONSOLE
-		printf("uart failed in call back\n");
+
+		printf("failed CB %i %i %i\n",(int)HAL_UART_GetState(uartS->uartHandler),(int)HAL_UART_GetError(uartS->uartHandler),debugNum);
 #endif
 	}
 
@@ -260,6 +267,8 @@ void UARTTXCallBackHandler(UART_STRUCT* uartS) {
 		} else {
 			outByteCount += uartS->txBuffer->available;
 			uartS->txBuffer->available = 0;
+			uartS->txBuffer->readIdx = 0;
+			uartS->txBuffer->writeIdx = 0;
 		}
 		uartS->txBuffer->locked = false;
 	}
@@ -344,12 +353,36 @@ void RingBufferCreate(RingBuffer_t *rb, uint8_t *buffer, int sizeOfBuffer) {
  * These functions will return -1 on error or number of bytes written
  * Overrun on write returns the size of the buffer + 1
  */
+int RingBufferWriteByte(RingBuffer_t *rb, uint8_t *in){
+	if (rb->locked == true){
+		lostByteCount++;
+		return -1;
+	}
+	rb->locked = true;
+	rb->buffer[rb->writeIdx] = *in;
+	rb->writeIdx++;
+	rb->available++;
+	if (rb->writeIdx == rb->size){
+		rb->writeIdx = 0;
+	}
+	if (rb->writeIdx == rb->readIdx){
+		rb->readIdx++;
+		rb->available = rb->size;
+	}
+
+	rb->locked = false;
+	return 0;
+}
 int RingBufferWrite(RingBuffer_t *rb, uint8_t *in, int count) {
 	if (count > rb->size) {
 		return -1;
 	}
-	while (rb->locked == true) {
+	if (rb->locked == true){
+		lostByteCount++;
+		return -1;
 	}
+	/*while (rb->locked == true) {
+	}*/
 	rb->locked = true;
 	if (rb->available == 0) {
 		rb->readIdx = 0;
