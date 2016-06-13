@@ -141,7 +141,9 @@ int main(void)
 #endif
 	UARTInit();
 	UARTWriteBuffer(&UART_2_STRUCT, testMessage1, sizeof(testMessage1) - 1);
-
+	//FILE* uartStream = UART_STREAM_CONFIG();
+	//fputc(0x55,uartStream);
+	//fputs("stream test\n",uartStream);
 	msCount = 0;
   /* USER CODE END 2 */
 

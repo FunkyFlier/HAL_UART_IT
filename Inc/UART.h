@@ -40,14 +40,13 @@ typedef volatile struct {
 	uint32_t available;
 	bool locked;
 } RingBuffer_t;
-typedef struct{
+typedef struct {
 	UART_HandleTypeDef *uartHandler;
 	volatile RingBuffer_t *rxBuffer;
 	volatile RingBuffer_t *txBuffer;
 	uint8_t* ISRBuf;
 	bool transmit;
-}UART_STRUCT;
-
+} UART_STRUCT;
 
 #ifdef UART_1
 UART_STRUCT UART_1_STRUCT;
@@ -124,18 +123,14 @@ RingBuffer_t UART_8_TX_RING;
 extern UART_HandleTypeDef huart8;
 #endif
 
-//#define UART_STREAMING
 
-#ifdef UART_STREAMING
-#define UART_STREAM_HAND huart2
-#endif
 
 void UARTInit();
 
-int UARTWriteByte(UART_STRUCT*,uint8_t*);
-int UARTWriteBuffer(UART_STRUCT*,uint8_t*,int);
-int UARTGetByte(UART_STRUCT*,uint8_t*);
-int UARTGetBuffer(UART_STRUCT*,uint8_t*,int);
+int UARTWriteByte(UART_STRUCT*, uint8_t*);
+int UARTWriteBuffer(UART_STRUCT*, uint8_t*, int);
+int UARTGetByte(UART_STRUCT*, uint8_t*);
+int UARTGetBuffer(UART_STRUCT*, uint8_t*, int);
 int UARTAvailabe(UART_STRUCT*);
 void UARTTXCallBackHandler(UART_STRUCT*);
 void UARTRXCallBackHandler(UART_STRUCT*);
@@ -147,13 +142,16 @@ int RingBufferWrite(RingBuffer_t*, uint8_t*, int);
 int RingBufferRead(RingBuffer_t*, uint8_t*, int);
 
 int RingBufferAvailable(RingBuffer_t*);
+
 /*
+#define UART_STREAMING
 #ifdef UART_STREAMING
+cookie_io_functions_t* cookiePointer;
+FILE* uart_Stream;
 FILE* UART_STREAM_CONFIG();
 int UART_PUTC(void*, char*,int);
 int UART_GETC(void*,const char* ,int n);
-#endif
-*/
 
+#endif*/
 
 #endif /* UART_H_ */

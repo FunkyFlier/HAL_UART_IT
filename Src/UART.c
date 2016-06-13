@@ -8,9 +8,9 @@
 #include <UART.h>
 
 extern int uartTimeOutDebugCounter;
-extern int inByteCount,outByteCount;
+extern int inByteCount, outByteCount;
 void UARTSetup(UART_STRUCT*, UART_HandleTypeDef*, volatile RingBuffer_t*,
-		volatile RingBuffer_t*,uint8_t*);
+		volatile RingBuffer_t*, uint8_t*);
 
 void UARTInit() {
 
@@ -30,9 +30,10 @@ void UARTInit() {
 			(int) sizeof(UART_2_RX_BUFFER));
 	RingBufferCreate(&UART_2_TX_RING, UART_2_TX_BUFFER,
 			(int) sizeof(UART_2_TX_BUFFER));
-	UARTSetup(&UART_2_STRUCT, &huart2, &UART_2_RX_RING, &UART_2_TX_RING, ISRBuffer_2);
-	if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler, UART_2_STRUCT.ISRBuf,
-			1) != HAL_OK) {
+	UARTSetup(&UART_2_STRUCT, &huart2, &UART_2_RX_RING, &UART_2_TX_RING,
+			ISRBuffer_2);
+	if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler, UART_2_STRUCT.ISRBuf, 1)
+			!= HAL_OK) {
 #ifdef DEBUG_TO_CONSOLE
 		printf("uart2 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
@@ -108,7 +109,8 @@ void UARTInit() {
 
 //setup
 void UARTSetup(UART_STRUCT* uartS, UART_HandleTypeDef* uartH,
-		volatile RingBuffer_t* rbRX, volatile RingBuffer_t* rbTX, uint8_t* ISRBuf) {
+		volatile RingBuffer_t* rbRX, volatile RingBuffer_t* rbTX,
+		uint8_t* ISRBuf) {
 	uartS->uartHandler = uartH;
 	uartS->rxBuffer = rbRX;
 	uartS->txBuffer = rbTX;
@@ -119,7 +121,7 @@ void UARTSetup(UART_STRUCT* uartS, UART_HandleTypeDef* uartH,
 
 //byte and buffer IO
 int UARTWriteByte(UART_STRUCT* uartS, uint8_t* buff) {
-	return UARTWriteBuffer(uartS,buff,1);
+	return UARTWriteBuffer(uartS, buff, 1);
 }
 int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 	int partialWriteAmount;
@@ -128,28 +130,30 @@ int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 
 	if (HAL_UART_Transmit_IT(uartS->uartHandler, buff, n) == HAL_BUSY) {
 		//check if buffer will be overrun
-		if (RingBufferAvailable(uartS->txBuffer) + n > UART_RING_BUF_SIZE_TX){
-			partialWriteAmount = UART_RING_BUF_SIZE_TX - RingBufferAvailable(uartS->txBuffer);
+		if (RingBufferAvailable(uartS->txBuffer) + n > UART_RING_BUF_SIZE_TX) {
+			partialWriteAmount = UART_RING_BUF_SIZE_TX
+					- RingBufferAvailable(uartS->txBuffer);
 			RingBufferWrite(uartS->txBuffer, buff, partialWriteAmount);
 			return partialWriteAmount;
 		}
 		RingBufferWrite(uartS->txBuffer, buff, n);
-	}else{
+	} else {
 		outByteCount += n;
 	}
-	if (uartS->transmit == true){
+	if (uartS->transmit == true) {
 		uartS->transmit = false;
-		if (uartS->txBuffer->locked == true || uartS->txBuffer->readIdx != 0){
-			printf("locked err %i\n",(int)uartS->txBuffer->readIdx);
+		if (uartS->txBuffer->locked == true || uartS->txBuffer->readIdx != 0) {
+			printf("locked err %i\n", (int) uartS->txBuffer->readIdx);
 			return -1;
 		}
 		uartS->txBuffer->locked = true;
 		uartTimeOutDebugCounter = 0;
-		if (uartS->txBuffer->available > uartS->txBuffer->size){
+		if (uartS->txBuffer->available > uartS->txBuffer->size) {
 			printf("sizeerr\n");
 		}
-		while(HAL_UART_Transmit_IT(uartS->uartHandler,uartS->txBuffer->buffer,uartS->txBuffer->available) == HAL_BUSY){
-			if (uartTimeOutDebugCounter == 1000){
+		while (HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer,
+				uartS->txBuffer->available) == HAL_BUSY) {
+			if (uartTimeOutDebugCounter == 1000) {
 				printf("stuckerr\n");
 				uartS->txBuffer->locked = false;
 				return -1;
@@ -162,7 +166,7 @@ int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 	return 0;
 }
 int UARTGetByte(UART_STRUCT* uartS, uint8_t* buff) {
-	return UARTGetBuffer(uartS,buff,1);
+	return UARTGetBuffer(uartS, buff, 1);
 }
 int UARTGetBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 	if (RingBufferAvailable(uartS->rxBuffer) == 0) {
@@ -181,7 +185,7 @@ void UARTRXCallBackHandler(UART_STRUCT* uartS) {
 	RingBufferWrite(uartS->rxBuffer, uartS->ISRBuf, 1);
 	inByteCount++;
 	__HAL_UART_FLUSH_DRREGISTER(uartS->uartHandler);
-	if (HAL_UART_Receive_IT(uartS->uartHandler,uartS->ISRBuf, 1) != HAL_OK) {
+	if (HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1) != HAL_OK) {
 #ifdef DEBUG_TO_CONSOLE
 		printf("uart failed in call back\n");
 #endif
@@ -250,18 +254,20 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 void UARTTXCallBackHandler(UART_STRUCT* uartS) {
 	//check if ring buffer is currently writing
 	//if so UARTWriteBuffer becomes blocking
-	if (UART_2_STRUCT.txBuffer->locked == true){
+	if (UART_2_STRUCT.txBuffer->locked == true) {
 		uartS->transmit = true;
 		return;
-	}else{
+	} else {
 		UART_2_STRUCT.txBuffer->locked = true;
-		if (UART_2_STRUCT.txBuffer->readIdx != 0){
+		if (UART_2_STRUCT.txBuffer->readIdx != 0) {
 			printf("rIDX\n");
 			return;
 		}
-		if (HAL_UART_Transmit_IT(UART_2_STRUCT.uartHandler,UART_2_STRUCT.txBuffer->buffer,UART_2_STRUCT.txBuffer->available) == HAL_BUSY){
+		if (HAL_UART_Transmit_IT(UART_2_STRUCT.uartHandler,
+				UART_2_STRUCT.txBuffer->buffer,
+				UART_2_STRUCT.txBuffer->available) == HAL_BUSY) {
 			printf("busyinCB\n");
-		}else{
+		} else {
 			outByteCount += UART_2_STRUCT.txBuffer->available;
 			UART_2_STRUCT.txBuffer->available = 0;
 		}
@@ -269,27 +275,27 @@ void UARTTXCallBackHandler(UART_STRUCT* uartS) {
 	}
 
 	/*
-	if (UART_2_STRUCT.txBuffer->available > 0) {
-				 if (UART_2_STRUCT.txBuffer->readIdx != 0){
-					 printf("invalid\n");
-				 }
-			 HAL_UART_Transmit_IT(UART_2_STRUCT.uartHandler,
-			 UART_2_STRUCT.txBuffer->buffer,
-			 UART_2_STRUCT.txBuffer->available);
-			 UART_2_STRUCT.txBuffer->available = 0;
-			 }*/
+	 if (UART_2_STRUCT.txBuffer->available > 0) {
+	 if (UART_2_STRUCT.txBuffer->readIdx != 0){
+	 printf("invalid\n");
+	 }
+	 HAL_UART_Transmit_IT(UART_2_STRUCT.uartHandler,
+	 UART_2_STRUCT.txBuffer->buffer,
+	 UART_2_STRUCT.txBuffer->available);
+	 UART_2_STRUCT.txBuffer->available = 0;
+	 }*/
 	/*if (RingBufferAvailable(uartS->txBuffer) > 0){
-		uartS->toTransmit = RingBufferAvailable(uartS->txBuffer);
-		if (uartS->toTransmit <= 0){
-			printf("<0\n");
-		}
-		if (RingBufferRead(uartS->txBuffer,UART_2_TX_TEMP_BUFFER,uartS->toTransmit) != uartS->toTransmit){
-			printf("!=\n");
-		}
-		if (HAL_UART_Transmit_IT(uartS->uartHandler,UART_2_TX_TEMP_BUFFER,uartS->toTransmit) == HAL_BUSY){
-			printf("busy\n");
-		}
-	}*/
+	 uartS->toTransmit = RingBufferAvailable(uartS->txBuffer);
+	 if (uartS->toTransmit <= 0){
+	 printf("<0\n");
+	 }
+	 if (RingBufferRead(uartS->txBuffer,UART_2_TX_TEMP_BUFFER,uartS->toTransmit) != uartS->toTransmit){
+	 printf("!=\n");
+	 }
+	 if (HAL_UART_Transmit_IT(uartS->uartHandler,UART_2_TX_TEMP_BUFFER,uartS->toTransmit) == HAL_BUSY){
+	 printf("busy\n");
+	 }
+	 }*/
 }
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 
@@ -303,7 +309,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 #ifdef USART2
 	case (uint32_t) USART2:
 #ifdef UART_2
-			UARTTXCallBackHandler(&UART_2_STRUCT);
+		UARTTXCallBackHandler(&UART_2_STRUCT);
 #endif//UART_2
 		break;
 #endif//USART2
@@ -440,20 +446,28 @@ int RingBufferAvailable(RingBuffer_t *rb) {
 	}
 	return rb->available;
 }
-/*
- //end ISR callbacks
- //streaming
- #ifdef UART_STREAMING
- FILE* UART_STREAM_CONFIG(){
- const cookie_io_functions_t* cookiePointer;
- FILE* uart_Stream = funopen(cookiePointer,UART_PUTC,UART_GETC,NULL,NULL);
- return uart_Stream;
- }
- int UART_PUTC(void *cookie, char *buf,int n){
- return 0;
- }
- int UART_GETC(void *cookie,const char *buf ,int n){
- return 0;
- }
- #endif
- //end streaming*/
+
+//end ISR callbacks
+//streamings
+/*#ifdef UART_STREAMING
+#define UART_STREAM_HANDLER UART_2_STRUCT
+FILE* UART_STREAM_CONFIG() {
+	uart_Stream = funopen(cookiePointer, UART_PUTC, UART_GETC,NULL, NULL);
+	return uart_Stream;
+}
+int UART_PUTC(void *cookie, char *buf, int n) {
+	if (UARTWriteBuffer(&UART_STREAM_HANDLER, (uint8_t*)buf, n) != 0) {
+		printf("putc\n");
+		return -1;
+	}
+	return 0;
+}
+int UART_GETC(void *cookie, const char *buf, int n) {
+	if (UARTGetBuffer(&UART_STREAM_HANDLER, (uint8_t*)buf, n) != 0) {
+		printf("getc\n");
+		return -1;
+	}
+	return 0;
+}
+#endif*/
+//end streaming
