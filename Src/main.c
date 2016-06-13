@@ -39,27 +39,8 @@
 #include <string.h> // memcpy
 #include <stdlib.h> //realloc
 #include <UART.h>
-//#include "RingBuffer.h"
 #include "defines.h"
 /*
- * todo tests
- * maximum speed loop back of data far exceeding buffer sizes works with an *
- * todo improvements
- * below is pointless. Just assemble the packet and send it all at once.
- * error code handling ring and uart - improve
- * return bytes read written / request more bytes than are available?
- * wrapper function for ring buffer so everything is handled via UART.h / just move it to UART.h?
- * function call to zero ring buffers
- * The problem with real term has been the timing of the bytes in and out.
- * There are varying delays and too short line idle times which are causing the misread by realterm
- * This behavior should be expected in a variety of different systems
- * To solve this the data will be output in bursts
- * To do so there will be two conditions
- * 1 - buffer limit reached
- * 2 - an amount of time lapsed since the last byte into the buffer
- * to achieve number two and keep the code non blocking a timer interrupt will be used
- * To this end a library will be made similarly to UART.h which will interface with the HAL
- * so that configuration of the timer behavior can be configured through defines
  * todo general
  * UART.h support DMA transfers
  */
@@ -253,7 +234,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 921600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
