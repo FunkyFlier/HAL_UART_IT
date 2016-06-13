@@ -72,13 +72,13 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-/*UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart1;
  UART_HandleTypeDef huart3;
  UART_HandleTypeDef huart4;
  UART_HandleTypeDef huart5;
  UART_HandleTypeDef huart6;
  UART_HandleTypeDef huart7;
- UART_HandleTypeDef huart8;*/
+ UART_HandleTypeDef huart8;
 uint8_t loopBackBuffer[128];
 uint8_t testMessage1[] = "does this work\r\n";
 
@@ -157,7 +157,6 @@ int main(void)
 		if (UARTAvailabe(&UART_2_STRUCT) > 0){
 			RingBufferWrite(&testRingBuff,loopBackBuffer,UARTGetBuffer(&UART_2_STRUCT,loopBackBuffer,UARTAvailabe(&UART_2_STRUCT)));
 			msCount = 0;
-			//UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,UARTGetBuffer(&UART_2_STRUCT,loopBackBuffer,UARTAvailabe(&UART_2_STRUCT)));
 		}
 		if (RingBufferAvailable(&testRingBuff) > 60 || (msCount > 100 && RingBufferAvailable(&testRingBuff) != 0)){
 			UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,RingBufferRead(&testRingBuff,loopBackBuffer,RingBufferAvailable(&testRingBuff)));

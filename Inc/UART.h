@@ -9,21 +9,15 @@
 #define UART_H_
 
 #include "stm32f4xx_hal.h"
-//#include "RingBuffer.h"
 #include "stdio.h"
 #include "defines.h"
 #include <stdint.h>//uint*_t
 #include <stddef.h>//size_t
-#include <string.h> // memcpy
-#include <stdlib.h> //realloc
+#include <string.h>// memcpy
+#include <stdlib.h>//realloc
 #include <stdbool.h>
 
-/*
- * Definitions to configure UART
- */
-#define UART_RING_BUF_SIZE_RX 128
-#define UART_RING_BUF_SIZE_TX 128
-
+/*Definitions to configure UART
 //#define UART_1
 //#define UART_2
 //#define UART_3
@@ -32,6 +26,10 @@
 //#define UART_6
 //#define UART_7
 //#define UART_8
+ */
+#define UART_RING_BUF_SIZE_RX 128
+#define UART_RING_BUF_SIZE_TX 128
+
 typedef volatile struct {
 	uint32_t readIdx;
 	uint32_t writeIdx;
@@ -40,6 +38,7 @@ typedef volatile struct {
 	uint32_t available;
 	bool locked;
 } RingBuffer_t;
+
 typedef struct {
 	UART_HandleTypeDef *uartHandler;
 	volatile RingBuffer_t *rxBuffer;
@@ -47,6 +46,20 @@ typedef struct {
 	uint8_t* ISRBuf;
 	bool transmit;
 } UART_STRUCT;
+
+void UARTInit();
+
+int UARTWriteByte(UART_STRUCT*, uint8_t*);
+int UARTWriteBuffer(UART_STRUCT*, uint8_t*, int);
+int UARTGetByte(UART_STRUCT*, uint8_t*);
+int UARTGetBuffer(UART_STRUCT*, uint8_t*, int);
+int UARTAvailabe(UART_STRUCT*);
+
+void RingBufferCreate(RingBuffer_t*, uint8_t*, int);
+
+int RingBufferWrite(RingBuffer_t*, uint8_t*, int);
+int RingBufferRead(RingBuffer_t*, uint8_t*, int);
+int RingBufferAvailable(RingBuffer_t*);
 
 #ifdef UART_1
 UART_STRUCT UART_1_STRUCT;
@@ -56,13 +69,11 @@ uint8_t ISRBuffer_1[1];
 RingBuffer_t UART_1_RX_RING;
 RingBuffer_t UART_1_TX_RING;
 extern UART_HandleTypeDef huart1;
-
 #endif
 #ifdef UART_2
 UART_STRUCT UART_2_STRUCT;
 uint8_t UART_2_RX_BUFFER[UART_RING_BUF_SIZE_RX];
 uint8_t UART_2_TX_BUFFER[UART_RING_BUF_SIZE_TX];
-uint8_t UART_2_TX_TEMP_BUFFER[UART_RING_BUF_SIZE_TX];
 uint8_t ISRBuffer_2[1];
 RingBuffer_t UART_2_RX_RING;
 RingBuffer_t UART_2_TX_RING;
@@ -123,25 +134,6 @@ RingBuffer_t UART_8_TX_RING;
 extern UART_HandleTypeDef huart8;
 #endif
 
-
-
-void UARTInit();
-
-int UARTWriteByte(UART_STRUCT*, uint8_t*);
-int UARTWriteBuffer(UART_STRUCT*, uint8_t*, int);
-int UARTGetByte(UART_STRUCT*, uint8_t*);
-int UARTGetBuffer(UART_STRUCT*, uint8_t*, int);
-int UARTAvailabe(UART_STRUCT*);
-void UARTTXCallBackHandler(UART_STRUCT*);
-void UARTRXCallBackHandler(UART_STRUCT*);
-
-void RingBufferCreate(RingBuffer_t*, uint8_t*, int);
-
-int RingBufferWrite(RingBuffer_t*, uint8_t*, int);
-
-int RingBufferRead(RingBuffer_t*, uint8_t*, int);
-
-int RingBufferAvailable(RingBuffer_t*);
 
 /*
 #define UART_STREAMING
