@@ -9,7 +9,7 @@
 #include <UART.h>
 
 extern int uartTimeOutDebugCounter;
-extern int inByteCount, outByteCount,lostByteCount;
+extern int inByteCount, outByteCount,lostByteCount,failedITStartCount;
 
 void UARTSetup(UART_STRUCT*, UART_HandleTypeDef*, volatile RingBuffer_t*,volatile RingBuffer_t*, uint8_t*);
 
@@ -107,6 +107,7 @@ void UARTSetup(UART_STRUCT* uartS, UART_HandleTypeDef* uartH,volatile RingBuffer
 	uartS->txBuffer = rbTX;
 	uartS->ISRBuf = ISRBuf;
 	uartS->transmit = false;
+	uartS->fixTxISR = false;
 }
 //end setup
 
@@ -140,8 +141,6 @@ int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 		uartTimeOutDebugCounter = 0;
 		while (HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer,uartS->txBuffer->available) == HAL_BUSY) {
 			if (uartTimeOutDebugCounter == 1000) {
-				HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, 1);
-				HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, 1);
 				printf("stuckerr\n");
 				uartS->txBuffer->locked = false;
 				return -1;
@@ -172,18 +171,21 @@ int UARTAvailabe(UART_STRUCT* uartS) {
 	return RingBufferAvailable(uartS->rxBuffer);
 }
 void UARTRXCallBackHandler(UART_STRUCT* uartS) {
-	int debugNum = 0;
+	//int debugNum = 0;
 	RingBufferWriteByte(uartS->rxBuffer, uartS->ISRBuf);
 	inByteCount++;
-	__HAL_UART_FLUSH_DRREGISTER(uartS->uartHandler);
+
 	//debugNum = HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1);
 	if (HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1) != HAL_OK) {
-	//if (debugNum != HAL_OK) {
 #ifdef DEBUG_TO_CONSOLE
-
-		printf("failed CB %i %i %i\n",(int)HAL_UART_GetState(uartS->uartHandler),(int)HAL_UART_GetError(uartS->uartHandler),debugNum);
+		HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, 1);
+		uartS->fixTxISR = true;
+		//printf("failed CB %i %i %i\n",(int)HAL_UART_GetState(uartS->uartHandler),(int)uartS->uartHandler->gState,uartS->uartHandler->RxState);
 #endif
 	}
+
+
+	__HAL_UART_FLUSH_DRREGISTER(uartS->uartHandler);
 
 }
 //end byte and buffer IO
@@ -272,6 +274,18 @@ void UARTTXCallBackHandler(UART_STRUCT* uartS) {
 		}
 		uartS->txBuffer->locked = false;
 	}
+	/*if (UART_2_STRUCT.fixTxISR == true){
+
+		if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler, UART_2_STRUCT.ISRBuf, 1) != HAL_OK) {
+	#ifdef DEBUG_TO_CONSOLE
+			HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, 1);
+			failedITStartCount++;
+			//printf("failed CB %i %i %i\n",(int)HAL_UART_GetState(UART_2_STRUCT.uartHandler),(int)UART_2_STRUCT.uartHandler->gState,UART_2_STRUCT.uartHandler->RxState);
+	#endif
+		}else{
+			UART_2_STRUCT.fixTxISR = false;
+		}
+	}*/
 
 }
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
@@ -338,7 +352,8 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 #ifdef DEBUG_TO_CONSOLE
-	printf("uart error: %lu\n", huart->ErrorCode);
+	//printf("uart error: %lu\n", huart->ErrorCode);
+	printf("u E: %i\nu S: %i\n", (int)HAL_UART_GetError(huart),(int)HAL_UART_GetState(huart));
 #endif
 }
 void RingBufferCreate(RingBuffer_t *rb, uint8_t *buffer, int sizeOfBuffer) {
@@ -418,7 +433,10 @@ int RingBufferWrite(RingBuffer_t *rb, uint8_t *in, int count) {
 }
 
 int RingBufferRead(RingBuffer_t *rb, uint8_t *out, int count) {
-	while (rb->locked == true) {
+	/*while (rb->locked == true) {
+	}*/
+	if (rb->locked == true){
+		return -1;
 	}
 	if (rb->available == 0) {
 		return -1;

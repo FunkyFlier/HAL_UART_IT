@@ -43,6 +43,7 @@
 /*
  * todo general
  * fix handling where a byte is received during during get
+ * have single byte reads from RB feed the buffer read?
  * UART.h support DMA transfers
  */
 /* USER CODE END Includes */
@@ -69,7 +70,8 @@ uint8_t testBuffer[128];
 RingBuffer_t testRingBuff;
 uint32_t msCount;
 uint32_t uartTimeOutDebugCounter;
-int inByteCount,outByteCount,lostByteCount;
+int inByteCount,outByteCount,lostByteCount,waitToTxCount,failedITStartCount;
+int readBytes;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -137,17 +139,40 @@ int main(void)
   /* USER CODE BEGIN 3 */
 		//
 		if (UARTAvailabe(&UART_2_STRUCT) > 0){
-			RingBufferWrite(&testRingBuff,loopBackBuffer,UARTGetBuffer(&UART_2_STRUCT,loopBackBuffer,UARTAvailabe(&UART_2_STRUCT)));
-			msCount = 0;
+			readBytes = UARTGetBuffer(&UART_2_STRUCT,loopBackBuffer,UARTAvailabe(&UART_2_STRUCT));
+			if (readBytes != -1){
+				RingBufferWrite(&testRingBuff,loopBackBuffer,readBytes);
+				msCount = 0;
+			}else{
+				HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, 1);
+			}
 		}
-		/*if (RingBufferAvailable(&testRingBuff) > 20 || (msCount > 100 && RingBufferAvailable(&testRingBuff) != 0)){
-			UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,RingBufferRead(&testRingBuff,loopBackBuffer,RingBufferAvailable(&testRingBuff)));
-		}*/
+		if (RingBufferAvailable(&testRingBuff) > 60 || (msCount > 100 && RingBufferAvailable(&testRingBuff) != 0)){
+			/*while(HAL_UART_GetState(UART_2_STRUCT.uartHandler) != HAL_UART_STATE_READY){
+				waitToTxCount++;
+				if (waitToTxCount == 84000000){
+					printf("stuck\n");
+				}
+			}*/
+			/*if (HAL_UART_GetState(UART_2_STRUCT.uartHandler) == HAL_UART_STATE_READY){
+				UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,RingBufferRead(&testRingBuff,loopBackBuffer,RingBufferAvailable(&testRingBuff)));
+			}*/
+			readBytes = RingBufferRead(&testRingBuff,loopBackBuffer,RingBufferAvailable(&testRingBuff));
+			if (readBytes != -1){
+				UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,readBytes);
+			}else{
+				HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, 1);
+			}
+
+
+		}
 		if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET){
-			printf("in: %i\nout: %i\nlost: %i\n",inByteCount , outByteCount,lostByteCount);
+			printf("in: %i\nout: %i\nlost: %i\nwait %i\nfails: %i\n",inByteCount , outByteCount,lostByteCount,waitToTxCount,failedITStartCount);
 			inByteCount = 0;
 			outByteCount = 0;
 			lostByteCount = 0;
+			waitToTxCount = 0;
+			failedITStartCount = 0;
 		}
 
 	}

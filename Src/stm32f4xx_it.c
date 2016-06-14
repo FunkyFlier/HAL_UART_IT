@@ -34,9 +34,9 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx.h"
 #include "stm32f4xx_it.h"
-
 /* USER CODE BEGIN 0 */
-extern uint32_t msCount,uartTimeOutDebugCounter;
+extern uint32_t msCount,uartTimeOutDebugCounter,failedITStartCount;
+#include "UART.h"
 /*#include "RingBuffer.h"
 extern uint8_t ISRBuffer[1];
 extern RingBuffer_t Uart2RXBuffer;
@@ -78,7 +78,18 @@ void SysTick_Handler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
+	if (UART_2_STRUCT.fixTxISR == true){
 
+		if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler, UART_2_STRUCT.ISRBuf, 1) != HAL_OK) {
+	#ifdef DEBUG_TO_CONSOLE
+			HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, 1);
+			failedITStartCount++;
+			//printf("failed CB %i %i %i\n",(int)HAL_UART_GetState(UART_2_STRUCT.uartHandler),(int)UART_2_STRUCT.uartHandler->gState,UART_2_STRUCT.uartHandler->RxState);
+	#endif
+		}else{
+			UART_2_STRUCT.fixTxISR = false;
+		}
+	}
   /* USER CODE END USART2_IRQn 0 */
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */
