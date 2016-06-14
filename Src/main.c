@@ -137,7 +137,7 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-		//
+
 		if (UARTAvailabe(&UART_2_STRUCT) > 0){
 			readBytes = UARTGetBuffer(&UART_2_STRUCT,loopBackBuffer,UARTAvailabe(&UART_2_STRUCT));
 			if (readBytes != -1){
@@ -148,15 +148,6 @@ int main(void)
 			}
 		}
 		if (RingBufferAvailable(&testRingBuff) > 60 || (msCount > 100 && RingBufferAvailable(&testRingBuff) != 0)){
-			/*while(HAL_UART_GetState(UART_2_STRUCT.uartHandler) != HAL_UART_STATE_READY){
-				waitToTxCount++;
-				if (waitToTxCount == 84000000){
-					printf("stuck\n");
-				}
-			}*/
-			/*if (HAL_UART_GetState(UART_2_STRUCT.uartHandler) == HAL_UART_STATE_READY){
-				UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,RingBufferRead(&testRingBuff,loopBackBuffer,RingBufferAvailable(&testRingBuff)));
-			}*/
 			readBytes = RingBufferRead(&testRingBuff,loopBackBuffer,RingBufferAvailable(&testRingBuff));
 			if (readBytes != -1){
 				UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,readBytes);
@@ -261,7 +252,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 460800;
+  huart2.Init.BaudRate = 230400;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;

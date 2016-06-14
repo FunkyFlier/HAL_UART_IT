@@ -128,10 +128,10 @@ int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 		outByteCount += n;
 	}
 	//handle interrupt firing during RingBufferWrite
-	if (uartS->transmit == true) {
+/*	if (uartS->transmit == true) {
 		uartS->transmit = false;
-		if (uartS->txBuffer->locked == true || uartS->txBuffer->readIdx != 0) {
-			printf("locked err %i\n", (int) uartS->txBuffer->readIdx);
+		/*if (uartS->txBuffer->locked == true || uartS->txBuffer->readIdx != 0) {
+			//printf("locked err %i\n", (int) uartS->txBuffer->readIdx);
 			return -1;
 		}
 		if (uartS->txBuffer->available > uartS->txBuffer->size) {
@@ -139,7 +139,11 @@ int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 		}
 		uartS->txBuffer->locked = true;
 		uartTimeOutDebugCounter = 0;
-		while (HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer,uartS->txBuffer->available) == HAL_BUSY) {
+		if (HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer,uartS->txBuffer->available) == HAL_BUSY){
+			uartS->txBuffer->locked = false;
+			return -1;
+		}
+		/*while (HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer,uartS->txBuffer->available) == HAL_BUSY) {
 			if (uartTimeOutDebugCounter == 1000) {
 				printf("stuckerr\n");
 				uartS->txBuffer->locked = false;
@@ -151,7 +155,7 @@ int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 		uartS->txBuffer->readIdx = 0;
 		uartS->txBuffer->writeIdx = 0;
 		uartS->txBuffer->locked = false;
-	}
+	}*/
 	return 0;
 }
 int UARTGetByte(UART_STRUCT* uartS, uint8_t* buff) {
