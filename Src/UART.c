@@ -107,7 +107,7 @@ void UARTSetup(UART_STRUCT* uartS, UART_HandleTypeDef* uartH,volatile RingBuffer
 	uartS->txBuffer = rbTX;
 	uartS->ISRBuf = ISRBuf;
 	uartS->transmit = false;
-	uartS->fixTxISR = false;
+	//uartS->fixTxISR = false;
 }
 //end setup
 
@@ -199,25 +199,27 @@ void UARTRXCallBackHandler(UART_STRUCT* uartS) {
 		uartS->collisionByte = uartS->ISRBuf[0];
 	}
 	inByteCount++;
-	/*infiniteLoopCounter = 0;
-	while(HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1) == HAL_BUSY){
-		if (infiniteLoopCounter == 1000){
-			printf("it went badly\n");
+
+	//kludge because the RX and TX share the same interrupt and lock the UART
+	if (HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1) != HAL_OK) {
+		if (uartS->uartHandler->RxState == HAL_UART_STATE_READY){
+			  if(uartS->uartHandler->RxState == HAL_UART_STATE_READY)
+			  {
+			    uartS->uartHandler->pRxBuffPtr = uartS->ISRBuf;
+			    uartS->uartHandler->RxXferSize = 1;
+			    uartS->uartHandler->RxXferCount = 1;
+			    uartS->uartHandler->ErrorCode = HAL_UART_ERROR_NONE;
+			    uartS->uartHandler->RxState = HAL_UART_STATE_BUSY_RX;
+			    /* Enable the UART Parity Error Interrupt */
+			    SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_PEIE);
+			    /* Enable the UART Error Interrupt: (Frame error, noise error, overrun error) */
+			    SET_BIT(uartS->uartHandler->Instance->CR3, USART_CR3_EIE);
+			    /* Enable the UART Data Register not empty Interrupt */
+			     SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_RXNEIE);
+			    //return HAL_OK;
+			  }
 		}
-	}*/
-	/*if (uartS->uartHandler->RxState == HAL_UART_STATE_READY && HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1) != HAL_OK){
 
-	}*/
-	//kludge because of the stupidity of sharing the same interrupt for TX and RX
-	//it keeps failing the RX because the TX locked the resource
-	//uartS->uartHandler->Lock = HAL_UNLOCKED;
-	//__HAL_UNLOCK(uartS->uartHandler);
-	debugStatus = HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1);
-	if (debugStatus != HAL_OK) {
-
-		printf("rxstate: %i\n" ,uartS->uartHandler->RxState);
-		uartS->fixTxISR = true;
-		fixISRCount++;
 	}
 
 

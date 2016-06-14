@@ -42,8 +42,7 @@
 #include "defines.h"
 /*
  * todo general
- * fix handling where a byte is received during during get
- * have single byte reads from RB feed the buffer read?
+ * last task should be fix collisions and code clean up
  * UART.h support DMA transfers
  */
 /* USER CODE END Includes */

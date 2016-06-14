@@ -45,7 +45,7 @@ typedef struct {
 	volatile RingBuffer_t *txBuffer;
 	uint8_t* ISRBuf;
 	bool transmit;
-	bool fixTxISR;
+	//bool fixTxISR;
 	bool readWriteCollision;
 	uint8_t collisionByte;
 } UART_STRUCT;

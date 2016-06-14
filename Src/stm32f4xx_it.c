@@ -87,16 +87,14 @@ void USART2_IRQHandler(void)
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */
 
-
-	if (UART_2_STRUCT.fixTxISR == true){
-
+	/*if (UART_2_STRUCT.fixTxISR == true){
 		if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler, UART_2_STRUCT.ISRBuf, 1) != HAL_OK) {
 			printf("rx: %i\ntx: %i\n",RXLockCount,TXLockCount);
 			failedITStartCount++;
 		}else{
 			UART_2_STRUCT.fixTxISR = false;
 		}
-	}
+	}*/
 
   /* USER CODE END USART2_IRQn 1 */
 }
