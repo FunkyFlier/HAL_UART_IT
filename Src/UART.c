@@ -174,7 +174,7 @@ int UARTGetBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 	n =  RingBufferRead(uartS->rxBuffer, buff, n);
 	//interrupt fired during buffer access
 	if (UART_2_STRUCT.readWriteCollision == true){
-		if (RingBufferWriteByte(uartS->rxBuffer, &uartS->collsionByte) == -1){
+		if (RingBufferWriteByte(uartS->rxBuffer, &uartS->collisionByte) == -1){
 			printf("collsion fix fail\n");
 		}else{
 			UART_2_STRUCT.readWriteCollision = false;
@@ -188,7 +188,7 @@ int UARTAvailabe(UART_STRUCT* uartS) {
 void UARTRXCallBackHandler(UART_STRUCT* uartS) {
 	if (RingBufferWriteByte(uartS->rxBuffer, uartS->ISRBuf) == -1){
 		UART_2_STRUCT.readWriteCollision = true;
-		uartS->collsionByte = uartS->ISRBuf[0];
+		uartS->collisionByte = uartS->ISRBuf[0];
 	}
 	inByteCount++;
 

@@ -47,7 +47,7 @@ typedef struct {
 	bool transmit;
 	bool fixTxISR;
 	bool readWriteCollision;
-	uint8_t collsionByte;
+	uint8_t collisionByte;
 } UART_STRUCT;
 
 void UARTInit();
