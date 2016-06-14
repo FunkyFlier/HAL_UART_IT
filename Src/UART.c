@@ -9,6 +9,7 @@
 #include <UART.h>
 
 extern int inByteCount, outByteCount, lostByteCount,fixISRCount;
+extern volatile int infiniteLoopCounter;
 
 void UARTSetup(UART_STRUCT*, UART_HandleTypeDef*, volatile RingBuffer_t*,
 		volatile RingBuffer_t*, uint8_t*);
@@ -188,6 +189,7 @@ int UARTGetBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 }
 
 void UARTRXCallBackHandler(UART_STRUCT* uartS) {
+	HAL_StatusTypeDef debugStatus;
 	__HAL_UART_FLUSH_DRREGISTER(uartS->uartHandler);
 	if (RingBufferWriteByte(uartS->rxBuffer, uartS->ISRBuf) == -1) {
 		if (UART_2_STRUCT.readWriteCollision == true) {
@@ -197,8 +199,23 @@ void UARTRXCallBackHandler(UART_STRUCT* uartS) {
 		uartS->collisionByte = uartS->ISRBuf[0];
 	}
 	inByteCount++;
+	/*infiniteLoopCounter = 0;
+	while(HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1) == HAL_BUSY){
+		if (infiniteLoopCounter == 1000){
+			printf("it went badly\n");
+		}
+	}*/
+	/*if (uartS->uartHandler->RxState == HAL_UART_STATE_READY && HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1) != HAL_OK){
 
-	if (HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1) != HAL_OK) {
+	}*/
+	//kludge because of the stupidity of sharing the same interrupt for TX and RX
+	//it keeps failing the RX because the TX locked the resource
+	//uartS->uartHandler->Lock = HAL_UNLOCKED;
+	//__HAL_UNLOCK(uartS->uartHandler);
+	debugStatus = HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1);
+	if (debugStatus != HAL_OK) {
+
+		printf("rxstate: %i\n" ,uartS->uartHandler->RxState);
 		uartS->fixTxISR = true;
 		fixISRCount++;
 	}

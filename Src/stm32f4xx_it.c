@@ -37,6 +37,8 @@
 
 /* USER CODE BEGIN 0 */
 extern uint32_t msCount,uartTimeOutDebugCounter,failedITStartCount;
+extern volatile int TXLockCount,RXLockCount;
+extern volatile int infiniteLoopCounter;
 #include "UART.h"
 /*#include "RingBuffer.h"
 extern uint8_t ISRBuffer[1];
@@ -76,6 +78,7 @@ void SysTick_Handler(void)
 /**
 * @brief This function handles USART2 global interrupt.
 */
+
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
@@ -88,6 +91,7 @@ void USART2_IRQHandler(void)
 	if (UART_2_STRUCT.fixTxISR == true){
 
 		if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler, UART_2_STRUCT.ISRBuf, 1) != HAL_OK) {
+			printf("rx: %i\ntx: %i\n",RXLockCount,TXLockCount);
 			failedITStartCount++;
 		}else{
 			UART_2_STRUCT.fixTxISR = false;
@@ -109,8 +113,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 }
 void HAL_SYSTICK_Callback(void)
 {
-	msCount++;
-	uartTimeOutDebugCounter++;
+	//msCount++;
+	infiniteLoopCounter++;
 }
 
 

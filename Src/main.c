@@ -74,6 +74,9 @@ int inByteCount,outByteCount,lostByteCount,waitToTxCount,failedITStartCount;
 int readBytes;
 int lostByDiff;
 int fixISRCount;
+
+volatile int TXLockCount,RXLockCount;
+volatile int infiniteLoopCounter;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -261,7 +264,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 460800;
+  huart2.Init.BaudRate = 921600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
