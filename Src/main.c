@@ -72,6 +72,8 @@ uint32_t msCount;
 uint32_t uartTimeOutDebugCounter;
 int inByteCount,outByteCount,lostByteCount,waitToTxCount,failedITStartCount;
 int readBytes;
+int lostByDiff;
+int fixISRCount;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -160,12 +162,13 @@ int main(void)
 
 		}
 		if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET){
-			printf("in: %i\nout: %i\nlost: %i\nwait %i\nfails: %i\n",inByteCount , outByteCount,lostByteCount,waitToTxCount,failedITStartCount);
+			lostByDiff = inByteCount - outByteCount;
+			printf("in: %i\nout: %i\nlost: %i\nlost diff: %i\nfails: %i\nfixisr: %i\n",inByteCount , outByteCount,lostByteCount,lostByDiff,failedITStartCount,fixISRCount);
 			inByteCount = 0;
 			outByteCount = 0;
-			lostByteCount = 0;
-			waitToTxCount = 0;
-			failedITStartCount = 0;
+			lostByteCount = 0;//inc in RX cb if col flag already set
+			failedITStartCount = 0;//inc in USART2_IRQHandler is unable to restart
+			fixISRCount = 0;//fixISRCount in RX cb if HAL_UART_Receive_IT is busy
 			HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, 0);
 			HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, 0);
 			HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, 0);

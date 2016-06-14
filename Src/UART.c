@@ -8,14 +8,13 @@
 
 #include <UART.h>
 
+extern int inByteCount, outByteCount, lostByteCount,fixISRCount;
 
-extern int inByteCount, outByteCount,lostByteCount;
-
-void UARTSetup(UART_STRUCT*, UART_HandleTypeDef*, volatile RingBuffer_t*,volatile RingBuffer_t*, uint8_t*);
+void UARTSetup(UART_STRUCT*, UART_HandleTypeDef*, volatile RingBuffer_t*,
+		volatile RingBuffer_t*, uint8_t*);
 
 void UARTTXCallBackHandler(UART_STRUCT*);
 void UARTRXCallBackHandler(UART_STRUCT*);
-
 
 void UARTInit() {
 #ifdef UART_1
@@ -32,7 +31,7 @@ void UARTInit() {
 	RingBufferCreate(&UART_2_RX_RING, UART_2_RX_BUFFER,(int) sizeof(UART_2_RX_BUFFER));
 	RingBufferCreate(&UART_2_TX_RING, UART_2_TX_BUFFER,(int) sizeof(UART_2_TX_BUFFER));
 	UARTSetup(&UART_2_STRUCT, &huart2, &UART_2_RX_RING, &UART_2_TX_RING,ISRBuffer_2);
-	if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler, UART_2_STRUCT.ISRBuf, 1)  != HAL_OK) {
+	if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler, UART_2_STRUCT.ISRBuf, 1)!= HAL_OK) {
 #ifdef DEBUG_TO_CONSOLE
 		printf("uart2 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
@@ -120,9 +119,10 @@ int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 	if (HAL_UART_Transmit_IT(uartS->uartHandler, buff, n) == HAL_BUSY) {
 		//check if buffer will be overrun
 		if (RingBufferAvailable(uartS->txBuffer) + n > UART_RING_BUF_SIZE_TX) {
-			RingBufferWrite(uartS->txBuffer, buff, UART_RING_BUF_SIZE_TX - RingBufferAvailable(uartS->txBuffer));
+			RingBufferWrite(uartS->txBuffer, buff,
+			UART_RING_BUF_SIZE_TX - RingBufferAvailable(uartS->txBuffer));
 			//return UART_RING_BUF_SIZE_TX - RingBufferAvailable(uartS->txBuffer);
-		}else{
+		} else {
 			RingBufferWrite(uartS->txBuffer, buff, n);
 		}
 	} else {
@@ -132,19 +132,39 @@ int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 	if (uartS->transmit == true) {
 		uartS->transmit = false;
 		uartS->txBuffer->locked = true;
-		//todo removed might cause trouble
-		if (HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer,uartS->txBuffer->available) == HAL_BUSY){
-			uartS->txBuffer->locked = false;
-			printf("shouldn't be here UARTWritebuffer\n");
-			return 1;
+		if (uartS->txBuffer->available != 0) {
+			//todo removed might cause trouble
+			HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer,uartS->txBuffer->available);
+			outByteCount += uartS->txBuffer->available;
+			uartS->txBuffer->available = 0;
+			uartS->txBuffer->readIdx = 0;
+			uartS->txBuffer->writeIdx = 0;
 		}
-		outByteCount += uartS->txBuffer->available;
-		uartS->txBuffer->available = 0;
-		uartS->txBuffer->readIdx = 0;
-		uartS->txBuffer->writeIdx = 0;
 		uartS->txBuffer->locked = false;
 	}
 	return 0;
+}
+void UARTTXCallBackHandler(UART_STRUCT* uartS) {
+	//check if ring buffer is currently writing
+	//if so UARTWriteBuffer becomes blocking
+	if (uartS->txBuffer->locked == true) {
+		uartS->transmit = true;
+		return;
+	} else {
+		uartS->txBuffer->locked = true;
+		if (uartS->txBuffer->available != 0) {
+			HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer,uartS->txBuffer->available);
+			outByteCount += uartS->txBuffer->available;
+			uartS->txBuffer->available = 0;
+			uartS->txBuffer->readIdx = 0;
+			uartS->txBuffer->writeIdx = 0;
+		}
+		uartS->txBuffer->locked = false;
+
+	}
+}
+int UARTAvailabe(UART_STRUCT* uartS) {
+	return RingBufferAvailable(uartS->rxBuffer);
 }
 int UARTGetByte(UART_STRUCT* uartS, uint8_t* buff) {
 	return UARTGetBuffer(uartS, buff, 1);
@@ -157,26 +177,20 @@ int UARTGetBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 		n = RingBufferAvailable(uartS->rxBuffer);
 	}
 
-	n =  RingBufferRead(uartS->rxBuffer, buff, n);
+	n = RingBufferRead(uartS->rxBuffer, buff, n);
 	//interrupt fired during buffer access
-	if (UART_2_STRUCT.readWriteCollision == true){
+	if (UART_2_STRUCT.readWriteCollision == true) {
 		//todo testing if this simplified version works
 		RingBufferWriteByte(uartS->rxBuffer, &uartS->collisionByte);
 		UART_2_STRUCT.readWriteCollision = false;
-		/*if (RingBufferWriteByte(uartS->rxBuffer, &uartS->collisionByte) == -1){
-			printf("collsion fix fail\n");
-		}else{
-			UART_2_STRUCT.readWriteCollision = false;
-		}*/
 	}
 	return n;
 }
-int UARTAvailabe(UART_STRUCT* uartS) {
-	return RingBufferAvailable(uartS->rxBuffer);
-}
+
 void UARTRXCallBackHandler(UART_STRUCT* uartS) {
-	if (RingBufferWriteByte(uartS->rxBuffer, uartS->ISRBuf) == -1){
-		if (UART_2_STRUCT.readWriteCollision == true){
+	__HAL_UART_FLUSH_DRREGISTER(uartS->uartHandler);
+	if (RingBufferWriteByte(uartS->rxBuffer, uartS->ISRBuf) == -1) {
+		if (UART_2_STRUCT.readWriteCollision == true) {
 			lostByteCount++;
 		}
 		UART_2_STRUCT.readWriteCollision = true;
@@ -186,10 +200,10 @@ void UARTRXCallBackHandler(UART_STRUCT* uartS) {
 
 	if (HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1) != HAL_OK) {
 		uartS->fixTxISR = true;
+		fixISRCount++;
 	}
 
 
-	__HAL_UART_FLUSH_DRREGISTER(uartS->uartHandler);
 
 }
 //end byte and buffer IO
@@ -256,48 +270,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	}
 
 }
-void UARTTXCallBackHandler(UART_STRUCT* uartS) {
-	//check if ring buffer is currently writing
-	//if so UARTWriteBuffer becomes blocking
-	if (uartS->txBuffer->locked == true) {
-		uartS->transmit = true;
-		return;
-	} else {
-		uartS->txBuffer->locked = true;
-		HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer,uartS->txBuffer->available);
-		outByteCount += uartS->txBuffer->available;
-		uartS->txBuffer->available = 0;
-		uartS->txBuffer->readIdx = 0;
-		uartS->txBuffer->writeIdx = 0;
-		uartS->txBuffer->locked = false;
-		/*if (uartS->txBuffer->readIdx != 0) {
-			printf("rIDX\n");
-			return;
-		}
-		if (HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer,uartS->txBuffer->available) == HAL_BUSY) {
-			printf("busyinCB\n");
-		} else {
-			outByteCount += uartS->txBuffer->available;
-			uartS->txBuffer->available = 0;
-			uartS->txBuffer->readIdx = 0;
-			uartS->txBuffer->writeIdx = 0;
-		}
-		uartS->txBuffer->locked = false;*/
-	}
-	/*if (UART_2_STRUCT.fixTxISR == true){
 
-		if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler, UART_2_STRUCT.ISRBuf, 1) != HAL_OK) {
-	#ifdef DEBUG_TO_CONSOLE
-			HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, 1);
-			failedITStartCount++;
-			//printf("failed CB %i %i %i\n",(int)HAL_UART_GetState(UART_2_STRUCT.uartHandler),(int)UART_2_STRUCT.uartHandler->gState,UART_2_STRUCT.uartHandler->RxState);
-	#endif
-		}else{
-			UART_2_STRUCT.fixTxISR = false;
-		}
-	}*/
-
-}
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 
 	switch ((uint32_t) huart->Instance) {
@@ -363,7 +336,8 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 #ifdef DEBUG_TO_CONSOLE
 	//printf("uart error: %lu\n", huart->ErrorCode);
-	printf("u E: %i\nu S: %i\n", (int)HAL_UART_GetError(huart),(int)HAL_UART_GetState(huart));
+	printf("u E: %i\nu S: %i\n", (int) HAL_UART_GetError(huart),
+			(int) HAL_UART_GetState(huart));
 #endif
 }
 void RingBufferCreate(RingBuffer_t *rb, uint8_t *buffer, int sizeOfBuffer) {
@@ -378,8 +352,8 @@ void RingBufferCreate(RingBuffer_t *rb, uint8_t *buffer, int sizeOfBuffer) {
  * These functions will return -1 on error or number of bytes written
  * Overrun on write returns the size of the buffer + 1
  */
-int RingBufferWriteByte(RingBuffer_t *rb, uint8_t *in){
-	if (rb->locked == true){
+int RingBufferWriteByte(RingBuffer_t *rb, uint8_t *in) {
+	if (rb->locked == true) {
 
 		return -1;
 	}
@@ -387,10 +361,10 @@ int RingBufferWriteByte(RingBuffer_t *rb, uint8_t *in){
 	rb->buffer[rb->writeIdx] = *in;
 	rb->writeIdx++;
 	rb->available++;
-	if (rb->writeIdx == rb->size){
+	if (rb->writeIdx == rb->size) {
 		rb->writeIdx = 0;
 	}
-	if (rb->writeIdx == rb->readIdx){
+	if (rb->writeIdx == rb->readIdx) {
 		rb->readIdx++;
 		rb->available = rb->size;
 	}
@@ -402,7 +376,7 @@ int RingBufferWrite(RingBuffer_t *rb, uint8_t *in, int count) {
 	if (count > rb->size) {
 		return -1;
 	}
-	if (rb->locked == true){
+	if (rb->locked == true) {
 		return -1;
 	}
 	rb->locked = true;
@@ -440,7 +414,7 @@ int RingBufferWrite(RingBuffer_t *rb, uint8_t *in, int count) {
 }
 
 int RingBufferRead(RingBuffer_t *rb, uint8_t *out, int count) {
-	if (rb->locked == true){
+	if (rb->locked == true) {
 		return -1;
 	}
 	if (rb->available == 0) {

@@ -27,8 +27,8 @@
 //#define UART_7
 //#define UART_8
  */
-#define UART_RING_BUF_SIZE_RX 64
-#define UART_RING_BUF_SIZE_TX 64
+#define UART_RING_BUF_SIZE_RX 128
+#define UART_RING_BUF_SIZE_TX 128
 
 typedef volatile struct {
 	uint32_t readIdx;
