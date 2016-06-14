@@ -62,11 +62,11 @@ UART_HandleTypeDef huart2;
  UART_HandleTypeDef huart6;
  UART_HandleTypeDef huart7;
  UART_HandleTypeDef huart8;*/
-uint8_t loopBackBuffer[128];
+uint8_t loopBackBuffer[UART_RING_BUF_SIZE_RX];
 uint8_t testMessage1[] = "does this work\r\n";
 
-uint8_t largeTestBuffer[130];
-uint8_t testBuffer[128];
+//uint8_t largeTestBuffer[UART_RING_BUF_SIZE_RX];
+uint8_t testBuffer[UART_RING_BUF_SIZE_RX];
 RingBuffer_t testRingBuff;
 uint32_t msCount;
 uint32_t uartTimeOutDebugCounter;
@@ -97,7 +97,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	RingBufferCreate(&testRingBuff,testBuffer,128);
+	RingBufferCreate(&testRingBuff,testBuffer,UART_RING_BUF_SIZE_RX);
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -147,7 +147,7 @@ int main(void)
 
 			}
 		}
-		if (RingBufferAvailable(&testRingBuff) > 120 || (msCount > 100 && RingBufferAvailable(&testRingBuff) != 0)){
+		if (RingBufferAvailable(&testRingBuff) > 0){// || (msCount > 100 && RingBufferAvailable(&testRingBuff) != 0)){
 			readBytes = RingBufferRead(&testRingBuff,loopBackBuffer,RingBufferAvailable(&testRingBuff));
 			if (readBytes != -1){
 				if (UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,readBytes) == -1){
@@ -433,7 +433,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 void RingBufferTest() {
-	static int returnCode;
+	/*static int returnCode;
 	uint8_t readBuffer[128];
 	//too much data to ring buffer
 	//returnCode = RingBufferWrite(&testRingBuff,largeTestBuffer,(int)sizeof(largeTestBuffer));
@@ -447,7 +447,7 @@ void RingBufferTest() {
 	printf("code: %i\n",returnCode);
 	returnCode = RingBufferRead(&testRingBuff,readBuffer,119);
 	printf("code: %i\n",returnCode);
-	printf("rb tests done\n");
+	printf("rb tests done\n");*/
 }
 /* USER CODE END 4 */
 
