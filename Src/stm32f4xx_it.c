@@ -36,7 +36,7 @@
 #include "stm32f4xx_it.h"
 
 /* USER CODE BEGIN 0 */
-extern uint32_t msCount,uartTimeOutDebugCounter,outByteCount;
+extern uint32_t msCount,uartTimeOutDebugCounter,outByteCount,failedITStartCount;
 #include "UART.h"
 /*#include "RingBuffer.h"
 extern uint8_t ISRBuffer[1];
@@ -85,7 +85,7 @@ void USART2_IRQHandler(void)
   /* USER CODE BEGIN USART2_IRQn 1 */
 
 
-/*	if (UART_2_STRUCT.fixTxISR == true){
+	if (UART_2_STRUCT.fixTxISR == true){
 
 		if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler, UART_2_STRUCT.ISRBuf, 1) != HAL_OK) {
 	#ifdef DEBUG_TO_CONSOLE
@@ -96,23 +96,8 @@ void USART2_IRQHandler(void)
 		}else{
 			UART_2_STRUCT.fixTxISR = false;
 		}
-	}*/
+	}
 
-  if (UART_2_STRUCT.transmit == true) {
-	  UART_2_STRUCT.transmit = false;
-
-	  UART_2_STRUCT.txBuffer->locked = true;
-  		uartTimeOutDebugCounter = 0;
-  		if (HAL_UART_Transmit_IT(UART_2_STRUCT.uartHandler, UART_2_STRUCT.txBuffer->buffer,UART_2_STRUCT.txBuffer->available) == HAL_BUSY){
-  			UART_2_STRUCT.txBuffer->locked = false;
-  			//return -1;
-  		}
-  		outByteCount += UART_2_STRUCT.txBuffer->available;
-  		UART_2_STRUCT.txBuffer->available = 0;
-  		UART_2_STRUCT.txBuffer->readIdx = 0;
-  		UART_2_STRUCT.txBuffer->writeIdx = 0;
-  		UART_2_STRUCT.txBuffer->locked = false;
-  	}
   /* USER CODE END USART2_IRQn 1 */
 }
 

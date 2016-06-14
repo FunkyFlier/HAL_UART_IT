@@ -144,15 +144,17 @@ int main(void)
 				RingBufferWrite(&testRingBuff,loopBackBuffer,readBytes);
 				msCount = 0;
 			}else{
-				HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, 1);
+
 			}
 		}
-		if (RingBufferAvailable(&testRingBuff) > 60 || (msCount > 100 && RingBufferAvailable(&testRingBuff) != 0)){
+		if (RingBufferAvailable(&testRingBuff) > 120 || (msCount > 100 && RingBufferAvailable(&testRingBuff) != 0)){
 			readBytes = RingBufferRead(&testRingBuff,loopBackBuffer,RingBufferAvailable(&testRingBuff));
 			if (readBytes != -1){
-				UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,readBytes);
+				if (UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,readBytes) == -1){
+					HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, 1);
+				}
 			}else{
-				HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, 1);
+
 			}
 
 
@@ -164,6 +166,10 @@ int main(void)
 			lostByteCount = 0;
 			waitToTxCount = 0;
 			failedITStartCount = 0;
+			HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, 0);
+			HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, 0);
+			HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, 0);
+			HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, 0);
 		}
 
 	}
@@ -252,7 +258,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 230400;
+  huart2.Init.BaudRate = 460800;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;

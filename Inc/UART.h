@@ -46,6 +46,8 @@ typedef struct {
 	uint8_t* ISRBuf;
 	bool transmit;
 	bool fixTxISR;
+	bool readWriteCollision;
+	uint8_t collsionByte;
 } UART_STRUCT;
 
 void UARTInit();

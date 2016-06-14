@@ -117,6 +117,7 @@ int UARTWriteByte(UART_STRUCT* uartS, uint8_t* buff) {
 }
 int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 	//if TX buffer is going to over run function returns written bytes
+	//printf("message test\n");
 	if (HAL_UART_Transmit_IT(uartS->uartHandler, buff, n) == HAL_BUSY) {
 		//check if buffer will be overrun
 		if (RingBufferAvailable(uartS->txBuffer) + n > UART_RING_BUF_SIZE_TX) {
@@ -128,10 +129,11 @@ int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 		outByteCount += n;
 	}
 	//handle interrupt firing during RingBufferWrite
-/*	if (uartS->transmit == true) {
+	if (uartS->transmit == true) {
 		uartS->transmit = false;
-		/*if (uartS->txBuffer->locked == true || uartS->txBuffer->readIdx != 0) {
-			//printf("locked err %i\n", (int) uartS->txBuffer->readIdx);
+		if (uartS->txBuffer->locked == true || uartS->txBuffer->readIdx != 0) {
+			printf("locked err %i\n", (int) uartS->txBuffer->readIdx);
+			//HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, 1);
 			return -1;
 		}
 		if (uartS->txBuffer->available > uartS->txBuffer->size) {
@@ -149,13 +151,13 @@ int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 				uartS->txBuffer->locked = false;
 				return -1;
 			}
-		}
+		}*/
 		outByteCount += uartS->txBuffer->available;
 		uartS->txBuffer->available = 0;
 		uartS->txBuffer->readIdx = 0;
 		uartS->txBuffer->writeIdx = 0;
 		uartS->txBuffer->locked = false;
-	}*/
+	}
 	return 0;
 }
 int UARTGetByte(UART_STRUCT* uartS, uint8_t* buff) {
@@ -168,18 +170,28 @@ int UARTGetBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 	if (RingBufferAvailable(uartS->rxBuffer) < n) {
 		n = RingBufferAvailable(uartS->rxBuffer);
 	}
-	return RingBufferRead(uartS->rxBuffer, buff, n);
 
+	n =  RingBufferRead(uartS->rxBuffer, buff, n);
+	//interrupt fired during buffer access
+	if (UART_2_STRUCT.readWriteCollision == true){
+		if (RingBufferWriteByte(uartS->rxBuffer, &uartS->collsionByte) == -1){
+			printf("collsion fix fail\n");
+		}else{
+			UART_2_STRUCT.readWriteCollision = false;
+		}
+	}
+	return n;
 }
 int UARTAvailabe(UART_STRUCT* uartS) {
 	return RingBufferAvailable(uartS->rxBuffer);
 }
 void UARTRXCallBackHandler(UART_STRUCT* uartS) {
-	//int debugNum = 0;
-	RingBufferWriteByte(uartS->rxBuffer, uartS->ISRBuf);
+	if (RingBufferWriteByte(uartS->rxBuffer, uartS->ISRBuf) == -1){
+		UART_2_STRUCT.readWriteCollision = true;
+		uartS->collsionByte = uartS->ISRBuf[0];
+	}
 	inByteCount++;
 
-	//debugNum = HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1);
 	if (HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1) != HAL_OK) {
 #ifdef DEBUG_TO_CONSOLE
 		HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, 1);
