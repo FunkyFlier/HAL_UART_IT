@@ -7,7 +7,7 @@
  */
 
 #include <UART.h>
-
+#include <UART_BUFFER.h>
 extern int inByteCount, outByteCount, lostByteCount,fixISRCount;
 extern volatile int infiniteLoopCounter;
 
@@ -112,7 +112,34 @@ void UARTSetup(UART_STRUCT* uartS, UART_HandleTypeDef* uartH,volatile RingBuffer
 //end setup
 
 //byte and buffer IO
-int UARTWriteByte(UART_STRUCT* uartS, uint8_t* buff) {
+int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
+	if (HAL_UART_Transmit_IT(uartS->uartHandler, buff, n) == HAL_BUSY) {
+		n = TrasnmitBufferWrite(uartS->txBuffer, buff, n);
+	}
+	if (TransmitBufferAvailable(tb) > 0){
+		if (HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer, n) != HAL_BUSY) {
+			TrasnmitBufferSwap(uartS->txBuffer);
+		}else{
+			printf("tx buffer err\n");
+		}
+	}
+	return n;
+
+}
+void UARTTXCallBackHandler(UART_STRUCT* uartS) {
+	if (uartS->txBuffer->writing == true) {
+		return;
+	}
+	if (TransmitBufferAvailable(tb) > 0){
+		if (HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer, n) != HAL_BUSY) {
+			TrasnmitBufferSwap(uartS->txBuffer);
+		}else{
+			printf("tx buffer err in ISR\n");
+		}
+	}
+
+}
+/*int UARTWriteByte(UART_STRUCT* uartS, uint8_t* buff) {
 	return UARTWriteBuffer(uartS, buff, 1);
 }
 int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
@@ -163,7 +190,7 @@ void UARTTXCallBackHandler(UART_STRUCT* uartS) {
 		uartS->txBuffer->locked = false;
 
 	}
-}
+}*/
 int UARTAvailabe(UART_STRUCT* uartS) {
 	return RingBufferAvailable(uartS->rxBuffer);
 }

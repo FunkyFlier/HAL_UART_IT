@@ -79,7 +79,7 @@ uint8_t UART_2_RX_BUFFER[UART_RING_BUF_SIZE_RX];
 uint8_t UART_2_TX_BUFFER[UART_RING_BUF_SIZE_TX];
 uint8_t ISRBuffer_2[1];
 RingBuffer_t UART_2_RX_RING;
-RingBuffer_t UART_2_TX_RING;
+RingBuffer_t UART_2_TX_RING;//to do
 extern UART_HandleTypeDef huart2;
 #endif
 #ifdef UART_3

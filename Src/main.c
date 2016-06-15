@@ -42,7 +42,7 @@
 #include "defines.h"
 /*
  * todo general
- * last task should be fix collisions and code clean up
+ * to finish collision fix integrate the new buffers into the UART
  * UART.h support DMA transfers
  */
 /* USER CODE END Includes */
@@ -155,7 +155,7 @@ int main(void)
 			readBytes = RingBufferRead(&testRingBuff,loopBackBuffer,RingBufferAvailable(&testRingBuff));
 			if (readBytes != -1){
 				if (UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,readBytes) == -1){
-					HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, 1);
+					//HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, 1);
 				}
 			}else{
 
