@@ -36,9 +36,9 @@
 #include "stm32f4xx_it.h"
 
 /* USER CODE BEGIN 0 */
-extern uint32_t msCount,uartTimeOutDebugCounter,failedITStartCount;
-extern volatile int TXLockCount,RXLockCount;
-extern volatile int infiniteLoopCounter;
+//extern uint32_t msCount,uartTimeOutDebugCounter,failedITStartCount;
+//extern volatile int TXLockCount,RXLockCount;
+//extern volatile int infiniteLoopCounter;
 #include "UART.h"
 /*#include "RingBuffer.h"
 extern uint8_t ISRBuffer[1];
@@ -112,7 +112,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 void HAL_SYSTICK_Callback(void)
 {
 	//msCount++;
-	infiniteLoopCounter++;
+	//infiniteLoopCounter++;
 }
 
 
