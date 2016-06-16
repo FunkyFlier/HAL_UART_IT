@@ -10,12 +10,12 @@
 #include <stdbool.h>
 #include "string.h"
 #include "stdint.h"
+#include <stdio.h>
 //macros
 #define DoubleBufferFree(T) ((T)->size - (T)->writeIdx)
 #define DoubleBufferAvailable(T) ((T)->writeIdx)
 #define DoubleBufferCommitWrite(T,A) ((T)->writeIdx += A)
 
-#define RingBufferAvailable(B) (((B)->writeIdx + 1) % (B)->size - (B)->readIdx - 1)
 #define RingBufferFree(B) ((B)->size - RingBufferAvailable(B))
 #define RingWriteIdxToEnd(B) ((B)->size - (B)->writeIdx)//todo rename these
 #define RingReadIdxToEnd(B) ((B)->size - (B)->readIdx)
@@ -49,7 +49,7 @@ void RingBufferCreate(RingBuffer_t *, uint8_t *, int );
 int RingBufferWriteByte(RingBuffer_t *, uint8_t *);
 int RingBufferWrite(RingBuffer_t *, uint8_t *, int );
 int RingBufferRead(RingBuffer_t *, uint8_t *, int );
-
-
+int RingBufferReadByte(RingBuffer_t *, uint8_t *);
+int RingBufferAvailable(RingBuffer_t *);
 
 #endif /* UART_BUFFER_H_ */

@@ -113,17 +113,20 @@ void UARTSetup(UART_STRUCT* uartS, UART_HandleTypeDef* uartH,RingBuffer_t* rbRX,
 
 //byte and buffer IO
 int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
-	if (HAL_UART_Transmit_IT(uartS->uartHandler, buff, n) == HAL_BUSY) {
+
+	/*if (HAL_UART_Transmit_IT(uartS->uartHandler, buff, n) == HAL_BUSY) {
 		n = DoubleBufferWrite(uartS->txBuffer, buff, n);
 		if (n == -1){
 			uartS->TXOverRun = true;
 		}
+	}*/
+	n = DoubleBufferWrite(uartS->txBuffer, buff, n);
+	if (n == -1){
+		uartS->TXOverRun = true;
 	}
 	if (DoubleBufferAvailable(uartS->txBuffer) > 0){
 		if (HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer, DoubleBufferAvailable(uartS->txBuffer)) != HAL_BUSY) {
 			DoubleBufferSwap(uartS->txBuffer);
-		}else{
-			printf("tx buffer err\n");
 		}
 	}
 	return n;
@@ -144,11 +147,11 @@ void UARTTXCallBackHandler(UART_STRUCT* uartS) {
 }
 int UARTAvailabe(UART_STRUCT* uartS) {
 	return RingBufferAvailable(uartS->rxBuffer);
-	return 0;
+	//return 0;
 }
 int UARTGetByte(UART_STRUCT* uartS, uint8_t* buff) {
-	return RingBufferReadByte(uartS, buff);
-	return 0;
+	return RingBufferReadByte(uartS->rxBuffer, buff);
+	//return 0;
 }
 int UARTGetBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 
@@ -180,21 +183,18 @@ void UARTRXCallBackHandler(UART_STRUCT* uartS) {
 	__HAL_UART_FLUSH_DRREGISTER(uartS->uartHandler);
 	if (HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1) != HAL_OK) {
 		if (uartS->uartHandler->RxState == HAL_UART_STATE_READY){
-			  if(uartS->uartHandler->RxState == HAL_UART_STATE_READY)
-			  {
-				uartS->uartHandler->pRxBuffPtr = uartS->ISRBuf;
-				uartS->uartHandler->RxXferSize = 1;
-				uartS->uartHandler->RxXferCount = 1;
-				uartS->uartHandler->ErrorCode = HAL_UART_ERROR_NONE;
-				uartS->uartHandler->RxState = HAL_UART_STATE_BUSY_RX;
-				SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_PEIE);
-				SET_BIT(uartS->uartHandler->Instance->CR3, USART_CR3_EIE);
-				 SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_RXNEIE);
-				//return HAL_OK;
-			  }
-		}
-
+			uartS->uartHandler->RxState = HAL_UART_STATE_BUSY_RX;
+			uartS->uartHandler->pRxBuffPtr = uartS->ISRBuf;
+			uartS->uartHandler->RxXferSize = 1;
+			uartS->uartHandler->RxXferCount = 1;
+			uartS->uartHandler->ErrorCode = HAL_UART_ERROR_NONE;
+			SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_PEIE);
+			SET_BIT(uartS->uartHandler->Instance->CR3, USART_CR3_EIE);
+			SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_RXNEIE);
+		  }
 	}
+
+
 	/*HAL_StatusTypeDef debugStatus;
 	__HAL_UART_FLUSH_DRREGISTER(uartS->uartHandler);
 	if (RingBufferWriteByte(uartS->rxBuffer, uartS->ISRBuf) == -1) {
