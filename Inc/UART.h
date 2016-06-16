@@ -38,9 +38,6 @@ typedef struct {
 	uint8_t* ISRBuf;
 	volatile bool RXOverRun;
 	volatile bool TXOverRun;
-	//volatile bool transmit;
-	//volatile bool readWriteCollision;
-	//uint8_t collisionByte;
 } UART_STRUCT;
 
 void UARTInit();

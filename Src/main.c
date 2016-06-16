@@ -42,7 +42,8 @@
 #include "defines.h"
 /*
  * todo general
- * to finish collision fix integrate the new buffers into the UART
+ * collisions fixed and buffer issues resolved
+ * clean up of driver remaining
  * UART.h support DMA transfers
  */
 /* USER CODE END Includes */
@@ -94,7 +95,7 @@ extern void initialise_monitor_handles(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-
+int temp1,temp2;
 /* USER CODE END 0 */
 
 int main(void)
@@ -102,6 +103,10 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 	RingBufferCreate(&testRingBuff,testBuffer,UART_RING_BUF_SIZE_RX);
+	/*uint8_t wtest = 0;
+	uint8_t rtest = 125;
+	int	rbReturn = ((typeof( wtest ))(( wtest ) - ( rtest )));
+	printf("start\n");*/
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -154,6 +159,8 @@ int main(void)
 
 			}
 		}
+		//temp1 = RingBufferAvailable(&testRingBuff);
+		//
 		if (RingBufferAvailable(&testRingBuff) > 0){// || (msCount > 100 && RingBufferAvailable(&testRingBuff) != 0)){
 
 			readBytes = RingBufferRead(&testRingBuff,loopBackBuffer,RingBufferAvailable(&testRingBuff));
@@ -267,7 +274,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 921600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;

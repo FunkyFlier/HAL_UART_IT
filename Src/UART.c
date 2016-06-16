@@ -113,13 +113,6 @@ void UARTSetup(UART_STRUCT* uartS, UART_HandleTypeDef* uartH,RingBuffer_t* rbRX,
 
 //byte and buffer IO
 int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
-
-	/*if (HAL_UART_Transmit_IT(uartS->uartHandler, buff, n) == HAL_BUSY) {
-		n = DoubleBufferWrite(uartS->txBuffer, buff, n);
-		if (n == -1){
-			uartS->TXOverRun = true;
-		}
-	}*/
 	n = DoubleBufferWrite(uartS->txBuffer, buff, n);
 	if (n == -1){
 		uartS->TXOverRun = true;
@@ -146,34 +139,16 @@ void UARTTXCallBackHandler(UART_STRUCT* uartS) {
 
 }
 int UARTAvailabe(UART_STRUCT* uartS) {
+	//return RingBufferAvailable(uartS->rxBuffer);
 	return RingBufferAvailable(uartS->rxBuffer);
 	//return 0;
 }
 int UARTGetByte(UART_STRUCT* uartS, uint8_t* buff) {
-	return RingBufferReadByte(uartS->rxBuffer, buff);
-	//return 0;
+	//return RingBufferReadByte(uartS->rxBuffer, buff);
+	return 0;
 }
 int UARTGetBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
-
-	/*if (RingBufferAvailable(uartS->rxBuffer) == 0) {
-		return -1;
-	}
-	if (RingBufferAvailable(uartS->rxBuffer) < n) {
-		n = RingBufferAvailable(uartS->rxBuffer);
-	}
-
-	n = RingBufferRead(uartS->rxBuffer, buff, n);
-	//interrupt fired during buffer access
-	if (UART_2_STRUCT.readWriteCollision == true) {
-		//todo testing if this simplified version works
-		RingBufferWriteByte(uartS->rxBuffer, &uartS->collisionByte);
-		UART_2_STRUCT.readWriteCollision = false;
-	}*/
-
 	return RingBufferRead(uartS->rxBuffer,buff,n);
-
-	//return n;
-
 }
 
 void UARTRXCallBackHandler(UART_STRUCT* uartS) {
@@ -195,150 +170,9 @@ void UARTRXCallBackHandler(UART_STRUCT* uartS) {
 	}
 
 
-	/*HAL_StatusTypeDef debugStatus;
-	__HAL_UART_FLUSH_DRREGISTER(uartS->uartHandler);
-	if (RingBufferWriteByte(uartS->rxBuffer, uartS->ISRBuf) == -1) {
-		if (UART_2_STRUCT.readWriteCollision == true) {
-			lostByteCount++;
-		}
-		UART_2_STRUCT.readWriteCollision = true;
-		uartS->collisionByte = uartS->ISRBuf[0];
-	}
-	inByteCount++;
-
-	//kludge because the RX and TX share the same interrupt and lock the UART
-	if (HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1) != HAL_OK) {
-		if (uartS->uartHandler->RxState == HAL_UART_STATE_READY){
-			  if(uartS->uartHandler->RxState == HAL_UART_STATE_READY)
-			  {
-			    uartS->uartHandler->pRxBuffPtr = uartS->ISRBuf;
-			    uartS->uartHandler->RxXferSize = 1;
-			    uartS->uartHandler->RxXferCount = 1;
-			    uartS->uartHandler->ErrorCode = HAL_UART_ERROR_NONE;
-			    uartS->uartHandler->RxState = HAL_UART_STATE_BUSY_RX;
-			    SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_PEIE);
-			    SET_BIT(uartS->uartHandler->Instance->CR3, USART_CR3_EIE);
-			     SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_RXNEIE);
-			    //return HAL_OK;
-			  }
-		}
-
-	}*/
-
-
 
 }
-/*int UARTWriteByte(UART_STRUCT* uartS, uint8_t* buff) {
-	return UARTWriteBuffer(uartS, buff, 1);
-}
-int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
-	//to do return number of bytes written
-	if (HAL_UART_Transmit_IT(uartS->uartHandler, buff, n) == HAL_BUSY) {
-		//check if buffer will be overrun
-		if (RingBufferAvailable(uartS->txBuffer) + n > UART_RING_BUF_SIZE_TX) {
-			RingBufferWrite(uartS->txBuffer, buff,
-			UART_RING_BUF_SIZE_TX - RingBufferAvailable(uartS->txBuffer));
-			//return UART_RING_BUF_SIZE_TX - RingBufferAvailable(uartS->txBuffer);
-		} else {
-			RingBufferWrite(uartS->txBuffer, buff, n);
-		}
-	} else {
-		outByteCount += n;
-	}
-	//handle interrupt firing during RingBufferWrite
-	if (uartS->transmit == true) {
-		uartS->transmit = false;
-		uartS->txBuffer->locked = true;
-		if (uartS->txBuffer->available != 0) {
-			//todo removed might cause trouble
-			HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer,uartS->txBuffer->available);
-			outByteCount += uartS->txBuffer->available;
-			uartS->txBuffer->available = 0;
-			uartS->txBuffer->readIdx = 0;
-			uartS->txBuffer->writeIdx = 0;
-		}
-		uartS->txBuffer->locked = false;
-	}
-	return 0;
-}
-void UARTTXCallBackHandler(UART_STRUCT* uartS) {
-	//check if ring buffer is currently writing
-	//if so UARTWriteBuffer becomes blocking
-	if (uartS->txBuffer->locked == true) {
-		uartS->transmit = true;
-		return;
-	} else {
-		uartS->txBuffer->locked = true;
-		if (uartS->txBuffer->available != 0) {
-			HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer,uartS->txBuffer->available);
-			outByteCount += uartS->txBuffer->available;
-			uartS->txBuffer->available = 0;
-			uartS->txBuffer->readIdx = 0;
-			uartS->txBuffer->writeIdx = 0;
-		}
-		uartS->txBuffer->locked = false;
 
-	}
-}
-int UARTAvailabe(UART_STRUCT* uartS) {
-	return RingBufferAvailable(uartS->rxBuffer);
-}
-int UARTGetByte(UART_STRUCT* uartS, uint8_t* buff) {
-	return UARTGetBuffer(uartS, buff, 1);
-}
-int UARTGetBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
-	if (RingBufferAvailable(uartS->rxBuffer) == 0) {
-		return -1;
-	}
-	if (RingBufferAvailable(uartS->rxBuffer) < n) {
-		n = RingBufferAvailable(uartS->rxBuffer);
-	}
-
-	n = RingBufferRead(uartS->rxBuffer, buff, n);
-	//interrupt fired during buffer access
-	if (UART_2_STRUCT.readWriteCollision == true) {
-		//todo testing if this simplified version works
-		RingBufferWriteByte(uartS->rxBuffer, &uartS->collisionByte);
-		UART_2_STRUCT.readWriteCollision = false;
-	}
-	return n;
-}
-
-void UARTRXCallBackHandler(UART_STRUCT* uartS) {
-	HAL_StatusTypeDef debugStatus;
-	__HAL_UART_FLUSH_DRREGISTER(uartS->uartHandler);
-	if (RingBufferWriteByte(uartS->rxBuffer, uartS->ISRBuf) == -1) {
-		if (UART_2_STRUCT.readWriteCollision == true) {
-			lostByteCount++;
-		}
-		UART_2_STRUCT.readWriteCollision = true;
-		uartS->collisionByte = uartS->ISRBuf[0];
-	}
-	inByteCount++;
-
-	//kludge because the RX and TX share the same interrupt and lock the UART
-	if (HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1) != HAL_OK) {
-		if (uartS->uartHandler->RxState == HAL_UART_STATE_READY){
-			  if(uartS->uartHandler->RxState == HAL_UART_STATE_READY)
-			  {
-			    uartS->uartHandler->pRxBuffPtr = uartS->ISRBuf;
-			    uartS->uartHandler->RxXferSize = 1;
-			    uartS->uartHandler->RxXferCount = 1;
-			    uartS->uartHandler->ErrorCode = HAL_UART_ERROR_NONE;
-			    uartS->uartHandler->RxState = HAL_UART_STATE_BUSY_RX;
-			    SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_PEIE);
-			    SET_BIT(uartS->uartHandler->Instance->CR3, USART_CR3_EIE);
-			     SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_RXNEIE);
-			    //return HAL_OK;
-			  }
-		}
-
-	}
-
-
-
-}*/
-//end byte and buffer IO
 //ISR callbacks
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	//this function puts the received byte into the correct ring buffer
@@ -472,119 +306,6 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 			(int) HAL_UART_GetState(huart));
 #endif
 }
-/*
-void RingBufferCreate(RingBuffer_t *rb, uint8_t *buffer, int sizeOfBuffer) {
-	rb->buffer = buffer;
-	rb->size = sizeOfBuffer;
-	rb->readIdx = 0;
-	rb->writeIdx = 0;
-	rb->available = 0;
-	rb->locked = false;
-}*/
-/*
- * These functions will return -1 on error or number of bytes written
- * Overrun on write returns the size of the buffer + 1
- */
-/*int RingBufferWriteByte(RingBuffer_t *rb, uint8_t *in) {
-	if (rb->locked == true) {
-
-		return -1;
-	}
-	rb->locked = true;
-	rb->buffer[rb->writeIdx] = *in;
-	rb->writeIdx++;
-	rb->available++;
-	if (rb->writeIdx == rb->size) {
-		rb->writeIdx = 0;
-	}
-	if (rb->writeIdx == rb->readIdx) {
-		rb->readIdx++;
-		rb->available = rb->size;
-	}
-
-	rb->locked = false;
-	return 0;
-}
-int RingBufferWrite(RingBuffer_t *rb, uint8_t *in, int count) {
-	if (count > rb->size) {
-		return -1;
-	}
-	if (rb->locked == true) {
-		return -1;
-	}
-	rb->locked = true;
-	if (rb->available == 0) {
-		rb->readIdx = 0;
-		rb->writeIdx = 0;
-		memcpy(&rb->buffer[rb->writeIdx], in, count);
-		rb->writeIdx = count - 1;
-		rb->available = count;
-	} else {
-		if (rb->writeIdx + count < rb->size) {
-			memcpy(&rb->buffer[rb->writeIdx + 1], in, count);
-			rb->writeIdx += count;
-		} else {
-			size_t part = rb->size - rb->writeIdx - 1;
-			memcpy(&rb->buffer[rb->writeIdx + 1], in, part);
-			memcpy(rb->buffer, in + part, count - part);
-			rb->writeIdx = count - part - 1;
-		}
-		if (count + rb->available > rb->size) {
-			rb->readIdx = rb->writeIdx + 1;
-			if (rb->readIdx == rb->size) {
-				rb->readIdx = 0;
-			}
-			rb->available = rb->size;
-			rb->locked = false;
-			return rb->size + 1;
-		} else {
-			rb->available += count;
-		}
-	}
-	rb->locked = false;
-	return count;
-
-}
-
-int RingBufferRead(RingBuffer_t *rb, uint8_t *out, int count) {
-	if (rb->locked == true) {
-		return -1;
-	}
-	if (rb->available == 0) {
-		return -1;
-	}
-
-	rb->locked = true;
-	if (count > rb->available) {
-		count = rb->available;
-	}
-	if ((rb->readIdx < rb->writeIdx)
-			|| ((rb->readIdx > rb->writeIdx)
-					&& ((rb->size - rb->readIdx) >= count))
-			|| rb->readIdx == rb->writeIdx) {
-		memcpy(out, &rb->buffer[rb->readIdx], count);
-		rb->readIdx += count;
-		rb->available -= count;
-	} else {
-		size_t part = rb->size - rb->readIdx;
-		memcpy(out, &rb->buffer[rb->readIdx], part);
-		memcpy(out + part, rb->buffer, count - part);
-		rb->readIdx = count - part - 1;
-		rb->available -= count;
-	}
-	if (rb->available == 0) {
-		rb->readIdx = 0;
-		rb->writeIdx = 0;
-	}
-	rb->locked = false;
-	return count;
-}
-int RingBufferAvailable(RingBuffer_t *rb) {
-	while (rb->locked == true) {
-	}
-	return rb->available;
-}
-*/
 
 //end ISR callbacks
 //streamings

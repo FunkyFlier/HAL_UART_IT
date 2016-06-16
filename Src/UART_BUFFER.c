@@ -43,12 +43,36 @@ void DoubleBufferSwap(DoubleBuffer_t *tb){
 	}
 	tb->writeIdx = 0;
 }
-int RingBufferAvailable(RingBuffer_t *rb) {
-	if (rb->writeIdx - rb->readIdx >= 0){
-		return rb->writeIdx - rb->readIdx;
+/*int RingBufferAvailableIn(RingBuffer_t *rb ) {
+	while(rb->updateWrite == true){
+
+	}
+	rb->availableIn =  rb->writeIdx - rb->readIdx;
+	if (rb->availableIn < 0){
+		rb->availableIn += rb->size;
 	 }
-	return rb->size + rb->writeIdx - rb->readIdx;
+	if (rb->availableIn < 0 || rb->availableIn > rb->size){
+		printf("av error in\n");
+	}
+	return rb->availableIn;
+
+
+}*/
+int RingBufferAvailable(RingBuffer_t *rb) {
+	int readIndex = rb->readIdx;
+	int writeIndex = rb->writeIdx;
+	int available =  writeIndex - readIndex;
+	if (available < 0){
+		available += rb->size;
+	 }
+	if (available < 0 || available > rb->size){
+		printf("av error out\n");
+	}
+	return available;
+
+
 }
+
 void RingBufferCreate(RingBuffer_t *rb, uint8_t *buffer, int sizeOfBuffer) {
 	rb->buffer = buffer;
 	rb->size = sizeOfBuffer;
@@ -58,29 +82,32 @@ void RingBufferCreate(RingBuffer_t *rb, uint8_t *buffer, int sizeOfBuffer) {
 
 //the write functions should be used in the RX ISR call back
 int RingBufferWriteByte(RingBuffer_t *rb, uint8_t *in) {
-	if (RingBufferAvailable(rb) >= rb->size){
-
+	int readIndex,nextWriteIdx;
+	readIndex = rb->readIdx;
+	nextWriteIdx = (rb->writeIdx + 1) % rb->size;
+	if (readIndex == nextWriteIdx){
 		return -1;
 	}
-	if (RingBufferAvailable(rb) < 0){
-			printf("avail err2\n");
-		}
 	rb->buffer[rb->writeIdx] = in[0];
-	RingBufferCommitWrite(rb, 1);
+	rb->writeIdx = (rb->writeIdx + (1)) % rb->size;
 	return 1;
 }
 int RingBufferWrite(RingBuffer_t *rb, uint8_t *in, int count) {
-	if (RingBufferAvailable(rb) >= rb->size){
+	int readIndex, available;//to do move to struct
+	readIndex = rb->readIdx;
+	available = rb->writeIdx - readIndex;
+	if (available < 0){
+		available += rb->size;
+	}
+	if (available >= rb->size){
 		return -1;
 	}
-	if(RingBufferAvailable(rb) == 0){
+	if(available == 0){
 		rb->writeIdx = rb->readIdx = 0;
 	}
-	if (RingBufferAvailable(rb) < 0){
-		printf("avail err1\n");
-	}
-	if (RingBufferFree(rb) < count){
-		count = RingBufferFree(rb);
+
+	if ((rb->size - available) < count){
+		count = (rb->size -available);
 	}
 	if (RingWriteIdxToEnd(rb) >= count){
 		memcpy(rb->buffer + rb->writeIdx, in, count);
@@ -92,27 +119,29 @@ int RingBufferWrite(RingBuffer_t *rb, uint8_t *in, int count) {
 	return count;
 }
 int RingBufferReadByte(RingBuffer_t *rb, uint8_t *out){
-	if (RingBufferAvailable(rb) == 0){
+	/*if (RingBufferAvailableOut(rb) == 0){
 		return -1;
 	}
-	if (RingBufferAvailable(rb) < 0){
-			printf("avail err3\n");
-		}
+
 	out[0] =  rb->buffer[rb->readIdx];
-	RingBufferCommitRead(rb,1);
+	RingBufferCommitRead(rb,1);*/
 	return 0;
 }
 int RingBufferRead(RingBuffer_t *rb, uint8_t *out, int count){
-	if (RingBufferAvailable(rb) == 0){
+	int writeIndex, available;//to do move to struct
+	writeIndex = rb->writeIdx;
+	available = writeIndex - rb->readIdx;
+	if (available < 0){
+		available += rb->size;
+	}
+	if (available == 0){
 		return -1;
 	}
-	if (RingBufferAvailable(rb) < 0){
-			printf("avail err4\n");
-		}
-	if (RingBufferAvailable(rb) < count){
-		count = RingBufferAvailable(rb);
+
+	if (available < count){
+		count = available;
 	}
-	if (rb->writeIdx > rb->readIdx){
+	if (writeIndex > rb->readIdx){
 		memcpy(out, rb->buffer + rb->readIdx, count);
 		RingBufferCommitRead(rb,count);
 		return count;

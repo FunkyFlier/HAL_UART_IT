@@ -27,9 +27,10 @@
 typedef struct{
 	uint8_t* buffer;
 	uint16_t size;
-	volatile uint16_t writeIdx;
-	volatile uint16_t readIdx;
-
+	volatile int writeIdx;
+	volatile int readIdx;
+	volatile int availableIn;
+	volatile int availableOut;
 }RingBuffer_t;
 
 typedef struct{
@@ -51,5 +52,4 @@ int RingBufferWrite(RingBuffer_t *, uint8_t *, int );
 int RingBufferRead(RingBuffer_t *, uint8_t *, int );
 int RingBufferReadByte(RingBuffer_t *, uint8_t *);
 int RingBufferAvailable(RingBuffer_t *);
-
 #endif /* UART_BUFFER_H_ */
