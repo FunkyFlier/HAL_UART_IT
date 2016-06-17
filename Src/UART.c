@@ -16,6 +16,7 @@ void DoubleBufferCreate(DoubleBuffer_t *, uint8_t *, uint8_t *,int );
 int DoubleBufferWrite(DoubleBuffer_t *, uint8_t *, int );
 void DoubleBufferSwap(DoubleBuffer_t *);
 int RingBufferWriteByte(RingBuffer_t *, uint8_t *);
+
 #ifdef LOOP_BACK_DEMO
 uint8_t testMessage0[] = "****************************\r\n";
 #ifdef UART_1
@@ -25,19 +26,25 @@ uint8_t testMessage1[] = "UART1 loop back demonstration\r\n";
 uint8_t testMessage2[] = "UART2 loop back demonstration\r\n";
 #endif
 #ifdef UART_3
+uint8_t testMessage2[] = "UART3 loop back demonstration\r\n";
 #endif
 #ifdef UART_4
+uint8_t testMessage2[] = "UART4 loop back demonstration\r\n";
 #endif
 #ifdef UART_5
+uint8_t testMessage2[] = "UART5 loop back demonstration\r\n";
 #endif
 #ifdef UART_6
 uint8_t testMessage6[] = "UART6 loop back demonstration\r\n";
 #endif
 #ifdef UART_7
+uint8_t testMessage2[] = "UART7 loop back demonstration\r\n";
 #endif
 #ifdef UART_8
+uint8_t testMessage2[] = "UART8 loop back demonstration\r\n";
 #endif
 #endif
+
 void UARTInit() {
 #ifdef UART_1
 	if (HAL_UART_GetState(&huart1) != HAL_UART_STATE_RESET){
@@ -98,6 +105,12 @@ void UARTInit() {
 		printf("uart3 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
 	}
+#ifdef LOOP_BACK_DEMO
+	RingBufferCreate(&loopBackUART3,loopBackUART3Buffer,UART_RING_BUF_SIZE_RX);
+	UARTWriteBuffer(&UART_3_STRUCT, testMessage0, sizeof(testMessage2) - 1);
+	UARTWriteBuffer(&UART_3_STRUCT, testMessage3, sizeof(testMessage1) - 1);
+	UARTWriteBuffer(&UART_3_STRUCT, testMessage0, sizeof(testMessage2) - 1);
+#endif
 #endif//UART_3
 #ifdef UART_4
 	if (HAL_UART_GetState(&huart4) != HAL_UART_STATE_RESET){
@@ -114,6 +127,12 @@ void UARTInit() {
 		printf("uart4 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
 	}
+#ifdef LOOP_BACK_DEMO
+	RingBufferCreate(&loopBackUART4,loopBackUART4Buffer,UART_RING_BUF_SIZE_RX);
+	UARTWriteBuffer(&UART_4_STRUCT, testMessage0, sizeof(testMessage2) - 1);
+	UARTWriteBuffer(&UART_4_STRUCT, testMessage4, sizeof(testMessage1) - 1);
+	UARTWriteBuffer(&UART_4_STRUCT, testMessage0, sizeof(testMessage2) - 1);
+#endif
 #endif//UART_4
 #ifdef UART_5
 	if (HAL_UART_GetState(&huart5) != HAL_UART_STATE_RESET){
@@ -130,6 +149,12 @@ void UARTInit() {
 		printf("uart5 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
 	}
+#ifdef LOOP_BACK_DEMO
+	RingBufferCreate(&loopBackUART5,loopBackUART5Buffer,UART_RING_BUF_SIZE_RX);
+	UARTWriteBuffer(&UART_5_STRUCT, testMessage0, sizeof(testMessage2) - 1);
+	UARTWriteBuffer(&UART_5_STRUCT, testMessage5, sizeof(testMessage1) - 1);
+	UARTWriteBuffer(&UART_5_STRUCT, testMessage0, sizeof(testMessage2) - 1);
+#endif
 #endif//UART_5
 #ifdef UART_6
 	if (HAL_UART_GetState(&huart6) != HAL_UART_STATE_RESET){
@@ -168,6 +193,12 @@ void UARTInit() {
 		printf("uart7 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
 	}
+#ifdef LOOP_BACK_DEMO
+	RingBufferCreate(&loopBackUART7,loopBackUART7Buffer,UART_RING_BUF_SIZE_RX);
+	UARTWriteBuffer(&UART_7_STRUCT, testMessage0, sizeof(testMessage2) - 1);
+	UARTWriteBuffer(&UART_7_STRUCT, testMessage7, sizeof(testMessage1) - 1);
+	UARTWriteBuffer(&UART_7_STRUCT, testMessage0, sizeof(testMessage2) - 1);
+#endif
 #endif//UART_7
 #ifdef UART_8
 	if (HAL_UART_GetState(&huart8) != HAL_UART_STATE_RESET){
@@ -184,6 +215,12 @@ void UARTInit() {
 		printf("uart8 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
 	}
+#ifdef LOOP_BACK_DEMO
+	RingBufferCreate(&loopBackUART8,loopBackUART8Buffer,UART_RING_BUF_SIZE_RX);
+	UARTWriteBuffer(&UART_8_STRUCT, testMessage0, sizeof(testMessage2) - 1);
+	UARTWriteBuffer(&UART_8_STRUCT, testMessage8, sizeof(testMessage1) - 1);
+	UARTWriteBuffer(&UART_8_STRUCT, testMessage0, sizeof(testMessage2) - 1);
+#endif
 #endif//UART_8
 }
 void UARTLoopDemo(){
@@ -218,6 +255,51 @@ void UARTLoopDemo(){
 
 	}
 #endif
+#ifdef UART_3
+	if (UARTAvailabe(&UART_3_STRUCT) > 0){
+		numBytes = UARTGetBuffer(&UART_3_STRUCT,loopBackBuffer,UARTAvailabe(&UART_3_STRUCT));
+		if (numBytes != -1){
+			RingBufferWrite(&loopBackUART3,loopBackBuffer,numBytes);
+		}
+	}
+	if (RingBufferAvailable(&loopBackUART3) > 0 ){
+		numBytes = RingBufferRead(&loopBackUART3,loopBackBuffer,RingBufferAvailable(&loopBackUART3));
+		if (numBytes != -1){
+			UARTWriteBuffer(&UART_3_STRUCT,loopBackBuffer,numBytes);
+		}
+
+	}
+#endif
+#ifdef UART_4
+	if (UARTAvailabe(&UART_4_STRUCT) > 0){
+		numBytes = UARTGetBuffer(&UART_4_STRUCT,loopBackBuffer,UARTAvailabe(&UART_4_STRUCT));
+		if (numBytes != -1){
+			RingBufferWrite(&loopBackUART4,loopBackBuffer,numBytes);
+		}
+	}
+	if (RingBufferAvailable(&loopBackUART4) > 0 ){
+		numBytes = RingBufferRead(&loopBackUART4,loopBackBuffer,RingBufferAvailable(&loopBackUART4));
+		if (numBytes != -1){
+			UARTWriteBuffer(&UART_4_STRUCT,loopBackBuffer,numBytes);
+		}
+
+	}
+#endif
+#ifdef UART_5
+	if (UARTAvailabe(&UART_5_STRUCT) > 0){
+		numBytes = UARTGetBuffer(&UART_5_STRUCT,loopBackBuffer,UARTAvailabe(&UART_5_STRUCT));
+		if (numBytes != -1){
+			RingBufferWrite(&loopBackUART5,loopBackBuffer,numBytes);
+		}
+	}
+	if (RingBufferAvailable(&loopBackUART5) > 0 ){
+		numBytes = RingBufferRead(&loopBackUART5,loopBackBuffer,RingBufferAvailable(&loopBackUART5));
+		if (numBytes != -1){
+			UARTWriteBuffer(&UART_5_STRUCT,loopBackBuffer,numBytes);
+		}
+
+	}
+#endif
 #ifdef UART_6
 	if (UARTAvailabe(&UART_6_STRUCT) > 0){
 		numBytes = UARTGetBuffer(&UART_6_STRUCT,loopBackBuffer,UARTAvailabe(&UART_6_STRUCT));
@@ -229,6 +311,51 @@ void UARTLoopDemo(){
 		numBytes = RingBufferRead(&loopBackUART6,loopBackBuffer,RingBufferAvailable(&loopBackUART6));
 		if (numBytes != -1){
 			UARTWriteBuffer(&UART_6_STRUCT,loopBackBuffer,numBytes);
+		}
+
+	}
+#endif
+#ifdef UART_6
+	if (UARTAvailabe(&UART_6_STRUCT) > 0){
+		numBytes = UARTGetBuffer(&UART_6_STRUCT,loopBackBuffer,UARTAvailabe(&UART_6_STRUCT));
+		if (numBytes != -1){
+			RingBufferWrite(&loopBackUART6,loopBackBuffer,numBytes);
+		}
+	}
+	if (RingBufferAvailable(&loopBackUART6) > 0 ){
+		numBytes = RingBufferRead(&loopBackUART6,loopBackBuffer,RingBufferAvailable(&loopBackUART6));
+		if (numBytes != -1){
+			UARTWriteBuffer(&UART_6_STRUCT,loopBackBuffer,numBytes);
+		}
+
+	}
+#endif
+#ifdef UART_7
+	if (UARTAvailabe(&UART_7_STRUCT) > 0){
+		numBytes = UARTGetBuffer(&UART_7_STRUCT,loopBackBuffer,UARTAvailabe(&UART_7_STRUCT));
+		if (numBytes != -1){
+			RingBufferWrite(&loopBackUART7,loopBackBuffer,numBytes);
+		}
+	}
+	if (RingBufferAvailable(&loopBackUART7) > 0 ){
+		numBytes = RingBufferRead(&loopBackUART7,loopBackBuffer,RingBufferAvailable(&loopBackUART7));
+		if (numBytes != -1){
+			UARTWriteBuffer(&UART_7_STRUCT,loopBackBuffer,numBytes);
+		}
+
+	}
+#endif
+#ifdef UART_8
+	if (UARTAvailabe(&UART_8_STRUCT) > 0){
+		numBytes = UARTGetBuffer(&UART_8_STRUCT,loopBackBuffer,UARTAvailabe(&UART_8_STRUCT));
+		if (numBytes != -1){
+			RingBufferWrite(&loopBackUART8,loopBackBuffer,numBytes);
+		}
+	}
+	if (RingBufferAvailable(&loopBackUART8) > 0 ){
+		numBytes = RingBufferRead(&loopBackUART8,loopBackBuffer,RingBufferAvailable(&loopBackUART8));
+		if (numBytes != -1){
+			UARTWriteBuffer(&UART_8_STRUCT,loopBackBuffer,numBytes);
 		}
 
 	}

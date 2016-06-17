@@ -34,16 +34,8 @@
 #include "stm32f4xx_hal.h"
 
 /* USER CODE BEGIN Includes */
-#include <stdint.h>
-#include <stddef.h>
-#include <string.h> // memcpy
-#include <stdlib.h> //realloc
 #include <UART.h>
-#include "defines.h"
-/*
- * todo general
- * UART.h support DMA transfers
- */
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -55,7 +47,7 @@ UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+#define DEBUG_TO_CONSOLE
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

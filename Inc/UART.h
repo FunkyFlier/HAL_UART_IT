@@ -9,11 +9,9 @@
 #define UART_H_
 
 #include "stm32f4xx_hal.h"
-#include "defines.h"
 #include <string.h>
 #include <stdbool.h>
 #include "stdint.h"
-#include <UART_BUFFER.h>
 #include <stdio.h>
 /*
 //#define UART_1
@@ -26,11 +24,15 @@
 //#define UART_8
 
  */
+#define UART_1
+#define UART_2
+#define UART_6
 
 #define LOOP_BACK_DEMO
 
 #define UART_RING_BUF_SIZE_RX 128
 #define UART_RING_BUF_SIZE_TX 128
+
 typedef struct{
 	uint8_t* buffer;
 	uint16_t size;
@@ -96,7 +98,6 @@ RingBuffer_t UART_1_RX_RING;
 DoubleBuffer_t UART_1_TX_DB;
 extern UART_HandleTypeDef huart1;
 #ifdef LOOP_BACK_DEMO
-
 uint8_t loopBackUART1Buffer[UART_RING_BUF_SIZE_RX];
 RingBuffer_t loopBackUART1;
 #endif
@@ -111,7 +112,6 @@ RingBuffer_t UART_2_RX_RING;
 DoubleBuffer_t UART_2_TX_DB;
 extern UART_HandleTypeDef huart2;
 #ifdef LOOP_BACK_DEMO
-
 uint8_t loopBackUART2Buffer[UART_RING_BUF_SIZE_RX];
 RingBuffer_t loopBackUART2;
 #endif
@@ -125,6 +125,10 @@ uint8_t ISRBuffer_3[1];
 RingBuffer_t UART_3_RX_RING;
 DoubleBuffer_t UART_3_TX_DB;
 extern UART_HandleTypeDef huart3;
+#ifdef LOOP_BACK_DEMO
+uint8_t loopBackUART3Buffer[UART_RING_BUF_SIZE_RX];
+RingBuffer_t loopBackUART3;
+#endif
 #endif
 #ifdef UART_4
 UART_STRUCT UART_4_STRUCT;
@@ -135,6 +139,10 @@ uint8_t ISRBuffer_4[1];
 RingBuffer_t UART_4_RX_RING;
 DoubleBuffer_t UART_4_TX_DB;
 extern UART_HandleTypeDef huart4;
+#ifdef LOOP_BACK_DEMO
+uint8_t loopBackUART4Buffer[UART_RING_BUF_SIZE_RX];
+RingBuffer_t loopBackUART4;
+#endif
 #endif
 #ifdef UART_5
 UART_STRUCT UART_5_STRUCT;
@@ -145,6 +153,10 @@ uint8_t ISRBuffer_5[1];
 RingBuffer_t UART_5_RX_RING;
 DoubleBuffer_t UART_5_TX_DB;
 extern UART_HandleTypeDef huart5;
+#ifdef LOOP_BACK_DEMO
+uint8_t loopBackUART5Buffer[UART_RING_BUF_SIZE_RX];
+RingBuffer_t loopBackUART5;
+#endif
 #endif
 #ifdef UART_6
 UART_STRUCT UART_6_STRUCT;
@@ -156,7 +168,6 @@ RingBuffer_t UART_6_RX_RING;
 DoubleBuffer_t UART_6_TX_DB;
 extern UART_HandleTypeDef huart6;
 #ifdef LOOP_BACK_DEMO
-
 uint8_t loopBackUART6Buffer[UART_RING_BUF_SIZE_RX];
 RingBuffer_t loopBackUART6;
 #endif
@@ -170,6 +181,10 @@ uint8_t ISRBuffer_7[1];
 RingBuffer_t UART_7_RX_RING;
 DoubleBuffer_t UART_7_TX_DB;
 extern UART_HandleTypeDef huart7;
+#ifdef LOOP_BACK_DEMO
+uint8_t loopBackUART7Buffer[UART_RING_BUF_SIZE_RX];
+RingBuffer_t loopBackUART7;
+#endif
 #endif
 #ifdef UART_8
 UART_STRUCT UART_8_STRUCT;
@@ -180,6 +195,10 @@ uint8_t ISRBuffer_8[1];
 RingBuffer_t UART_8_RX_RING;
 DoubleBuffer_t UART_8_TX_DB;
 extern UART_HandleTypeDef huart8;
+#ifdef LOOP_BACK_DEMO
+uint8_t loopBackUART8Buffer[UART_RING_BUF_SIZE_RX];
+RingBuffer_t loopBackUART8;
+#endif
 #endif
 
 
