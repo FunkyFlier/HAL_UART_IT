@@ -10,7 +10,7 @@
 //debug define
 #define DEBUG_TO_CONSOLE
 //uart defines
-//#define UART_1
+#define UART_1
 #define UART_2
 //#define UART_3
 //#define UART_4

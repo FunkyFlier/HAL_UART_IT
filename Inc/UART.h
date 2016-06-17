@@ -28,6 +28,7 @@
  */
 
 #define LOOP_BACK_DEMO
+
 #define UART_RING_BUF_SIZE_RX 128
 #define UART_RING_BUF_SIZE_TX 128
 typedef struct{
@@ -63,6 +64,7 @@ void UARTInit();
 int UARTWriteBuffer(UART_STRUCT*, uint8_t*, int);
 int UARTGetBuffer(UART_STRUCT*, uint8_t*, int);
 int UARTAvailabe(UART_STRUCT*);
+void UARTLoopDemo();
 
 void RingBufferCreate(RingBuffer_t *, uint8_t *, int );
 int RingBufferWrite(RingBuffer_t *, uint8_t *, int );
@@ -79,6 +81,11 @@ int RingBufferAvailable(RingBuffer_t *);
 #define RingBufferCommitRead(B, A) ((B)->readIdx = ((B)->readIdx + (A)) % (B)->size)
 #define RingBufferCommitWrite(B, A) ((B)->writeIdx = ((B)->writeIdx + (A)) % (B)->size)
 
+#ifdef LOOP_BACK_DEMO
+uint8_t loopBackBuffer[UART_RING_BUF_SIZE_RX];
+int numBytes;
+#endif
+
 #ifdef UART_1
 UART_STRUCT UART_1_STRUCT;
 uint8_t UART_1_RX_BUFFER[UART_RING_BUF_SIZE_RX];
@@ -88,6 +95,11 @@ uint8_t ISRBuffer_1[1];
 RingBuffer_t UART_1_RX_RING;
 DoubleBuffer_t UART_1_TX_DB;
 extern UART_HandleTypeDef huart1;
+#ifdef LOOP_BACK_DEMO
+
+uint8_t loopBackUART1Buffer[UART_RING_BUF_SIZE_RX];
+RingBuffer_t loopBackUART1;
+#endif
 #endif
 #ifdef UART_2
 UART_STRUCT UART_2_STRUCT;
@@ -98,6 +110,11 @@ uint8_t ISRBuffer_2[1];
 RingBuffer_t UART_2_RX_RING;
 DoubleBuffer_t UART_2_TX_DB;
 extern UART_HandleTypeDef huart2;
+#ifdef LOOP_BACK_DEMO
+
+uint8_t loopBackUART2Buffer[UART_RING_BUF_SIZE_RX];
+RingBuffer_t loopBackUART2;
+#endif
 #endif
 #ifdef UART_3
 UART_STRUCT UART_3_STRUCT;
@@ -138,6 +155,11 @@ uint8_t ISRBuffer_6[1];
 RingBuffer_t UART_6_RX_RING;
 DoubleBuffer_t UART_6_TX_DB;
 extern UART_HandleTypeDef huart6;
+#ifdef LOOP_BACK_DEMO
+
+uint8_t loopBackUART6Buffer[UART_RING_BUF_SIZE_RX];
+RingBuffer_t loopBackUART6;
+#endif
 #endif
 #ifdef UART_7
 UART_STRUCT UART_7_STRUCT;

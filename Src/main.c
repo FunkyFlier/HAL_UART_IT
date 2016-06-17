@@ -56,18 +56,6 @@ UART_HandleTypeDef huart6;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
-uint8_t testMessage1[] = "UART2 loop back demonstration\r\n";
-uint8_t testMessage2[] = "****************************\r\n";
-uint8_t testMessage3[] = "UART6 loop back demonstration\r\n";
-uint8_t loopBackBuffer[UART_RING_BUF_SIZE_RX];
-uint8_t loopBackUART2Buffer[UART_RING_BUF_SIZE_RX];
-RingBuffer_t loopBackUART2;
-
-uint8_t loopBackUART6Buffer[UART_RING_BUF_SIZE_RX];
-RingBuffer_t loopBackUART6;
-
-int numBytes;
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -94,8 +82,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	RingBufferCreate(&loopBackUART2,loopBackUART2Buffer,UART_RING_BUF_SIZE_RX);
-	RingBufferCreate(&loopBackUART6,loopBackUART6Buffer,UART_RING_BUF_SIZE_RX);
+
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -121,13 +108,6 @@ int main(void)
 	printf("start\n");
 #endif
 	UARTInit();
-	UARTWriteBuffer(&UART_6_STRUCT, testMessage2, sizeof(testMessage2) - 1);
-	UARTWriteBuffer(&UART_6_STRUCT, testMessage3, sizeof(testMessage1) - 1);
-	UARTWriteBuffer(&UART_6_STRUCT, testMessage2, sizeof(testMessage2) - 1);
-
-	UARTWriteBuffer(&UART_2_STRUCT, testMessage2, sizeof(testMessage2) - 1);
-	UARTWriteBuffer(&UART_2_STRUCT, testMessage1, sizeof(testMessage1) - 1);
-	UARTWriteBuffer(&UART_2_STRUCT, testMessage2, sizeof(testMessage2) - 1);
 
   /* USER CODE END 2 */
 
@@ -135,36 +115,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	while (1) {
   /* USER CODE END WHILE */
-
+		UARTLoopDemo();
   /* USER CODE BEGIN 3 */
-		//loop back UART 2
-		if (UARTAvailabe(&UART_2_STRUCT) > 0){
-			numBytes = UARTGetBuffer(&UART_2_STRUCT,loopBackBuffer,UARTAvailabe(&UART_2_STRUCT));
-			if (numBytes != -1){
-				RingBufferWrite(&loopBackUART2,loopBackBuffer,numBytes);
-			}
-		}
-		if (RingBufferAvailable(&loopBackUART2) > 0 ){
-			numBytes = RingBufferRead(&loopBackUART2,loopBackBuffer,RingBufferAvailable(&loopBackUART2));
-			if (numBytes != -1){
-				UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,numBytes);
-			}
 
-		}
-		//loop back UART 6
-		if (UARTAvailabe(&UART_6_STRUCT) > 0){
-			numBytes = UARTGetBuffer(&UART_6_STRUCT,loopBackBuffer,UARTAvailabe(&UART_6_STRUCT));
-			if (numBytes != -1){
-				RingBufferWrite(&loopBackUART6,loopBackBuffer,numBytes);
-			}
-		}
-		if (RingBufferAvailable(&loopBackUART6) > 0 ){
-			numBytes = RingBufferRead(&loopBackUART6,loopBackBuffer,RingBufferAvailable(&loopBackUART6));
-			if (numBytes != -1){
-				UARTWriteBuffer(&UART_6_STRUCT,loopBackBuffer,numBytes);
-			}
-
-		}
 	}
   /* USER CODE END 3 */
 

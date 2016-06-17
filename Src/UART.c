@@ -16,6 +16,28 @@ void DoubleBufferCreate(DoubleBuffer_t *, uint8_t *, uint8_t *,int );
 int DoubleBufferWrite(DoubleBuffer_t *, uint8_t *, int );
 void DoubleBufferSwap(DoubleBuffer_t *);
 int RingBufferWriteByte(RingBuffer_t *, uint8_t *);
+#ifdef LOOP_BACK_DEMO
+uint8_t testMessage0[] = "****************************\r\n";
+#ifdef UART_1
+uint8_t testMessage1[] = "UART1 loop back demonstration\r\n";
+#endif
+#ifdef UART_2
+uint8_t testMessage2[] = "UART2 loop back demonstration\r\n";
+#endif
+#ifdef UART_3
+#endif
+#ifdef UART_4
+#endif
+#ifdef UART_5
+#endif
+#ifdef UART_6
+uint8_t testMessage6[] = "UART6 loop back demonstration\r\n";
+#endif
+#ifdef UART_7
+#endif
+#ifdef UART_8
+#endif
+#endif
 void UARTInit() {
 #ifdef UART_1
 	if (HAL_UART_GetState(&huart1) != HAL_UART_STATE_RESET){
@@ -32,6 +54,12 @@ void UARTInit() {
 		printf("uart1 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
 	}
+#ifdef LOOP_BACK_DEMO
+	RingBufferCreate(&loopBackUART1,loopBackUART1Buffer,UART_RING_BUF_SIZE_RX);
+	UARTWriteBuffer(&UART_1_STRUCT, testMessage0, sizeof(testMessage2) - 1);
+	UARTWriteBuffer(&UART_1_STRUCT, testMessage1, sizeof(testMessage1) - 1);
+	UARTWriteBuffer(&UART_1_STRUCT, testMessage0, sizeof(testMessage2) - 1);
+#endif
 #endif//UART_1
 #ifdef UART_2
 	if (HAL_UART_GetState(&huart2) != HAL_UART_STATE_RESET){
@@ -48,6 +76,12 @@ void UARTInit() {
 		printf("uart2 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
 	}
+#ifdef LOOP_BACK_DEMO
+	RingBufferCreate(&loopBackUART2,loopBackUART2Buffer,UART_RING_BUF_SIZE_RX);
+	UARTWriteBuffer(&UART_2_STRUCT, testMessage0, sizeof(testMessage2) - 1);
+	UARTWriteBuffer(&UART_2_STRUCT, testMessage2, sizeof(testMessage1) - 1);
+	UARTWriteBuffer(&UART_2_STRUCT, testMessage0, sizeof(testMessage2) - 1);
+#endif
 #endif//UART_2
 #ifdef UART_3
 	if (HAL_UART_GetState(&huart3) != HAL_UART_STATE_RESET){
@@ -112,6 +146,12 @@ void UARTInit() {
 		printf("uart6 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
 	}
+#ifdef LOOP_BACK_DEMO
+	RingBufferCreate(&loopBackUART6,loopBackUART6Buffer,UART_RING_BUF_SIZE_RX);
+	UARTWriteBuffer(&UART_6_STRUCT, testMessage0, sizeof(testMessage2) - 1);
+	UARTWriteBuffer(&UART_6_STRUCT, testMessage6, sizeof(testMessage1) - 1);
+	UARTWriteBuffer(&UART_6_STRUCT, testMessage0, sizeof(testMessage2) - 1);
+#endif
 #endif//UART_6
 #ifdef UART_7
 	if (HAL_UART_GetState(&huart7) != HAL_UART_STATE_RESET){
@@ -146,7 +186,54 @@ void UARTInit() {
 	}
 #endif//UART_8
 }
+void UARTLoopDemo(){
 
+#ifdef UART_1
+	if (UARTAvailabe(&UART_1_STRUCT) > 0){
+		numBytes = UARTGetBuffer(&UART_1_STRUCT,loopBackBuffer,UARTAvailabe(&UART_1_STRUCT));
+		if (numBytes != -1){
+			RingBufferWrite(&loopBackUART1,loopBackBuffer,numBytes);
+		}
+	}
+	if (RingBufferAvailable(&loopBackUART1) > 0 ){
+		numBytes = RingBufferRead(&loopBackUART1,loopBackBuffer,RingBufferAvailable(&loopBackUART1));
+		if (numBytes != -1){
+			UARTWriteBuffer(&UART_1_STRUCT,loopBackBuffer,numBytes);
+		}
+
+	}
+#endif
+#ifdef UART_2
+	if (UARTAvailabe(&UART_2_STRUCT) > 0){
+		numBytes = UARTGetBuffer(&UART_2_STRUCT,loopBackBuffer,UARTAvailabe(&UART_2_STRUCT));
+		if (numBytes != -1){
+			RingBufferWrite(&loopBackUART2,loopBackBuffer,numBytes);
+		}
+	}
+	if (RingBufferAvailable(&loopBackUART2) > 0 ){
+		numBytes = RingBufferRead(&loopBackUART2,loopBackBuffer,RingBufferAvailable(&loopBackUART2));
+		if (numBytes != -1){
+			UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,numBytes);
+		}
+
+	}
+#endif
+#ifdef UART_6
+	if (UARTAvailabe(&UART_6_STRUCT) > 0){
+		numBytes = UARTGetBuffer(&UART_6_STRUCT,loopBackBuffer,UARTAvailabe(&UART_6_STRUCT));
+		if (numBytes != -1){
+			RingBufferWrite(&loopBackUART6,loopBackBuffer,numBytes);
+		}
+	}
+	if (RingBufferAvailable(&loopBackUART6) > 0 ){
+		numBytes = RingBufferRead(&loopBackUART6,loopBackBuffer,RingBufferAvailable(&loopBackUART6));
+		if (numBytes != -1){
+			UARTWriteBuffer(&UART_6_STRUCT,loopBackBuffer,numBytes);
+		}
+
+	}
+#endif
+}
 //setup
 void UARTSetup(UART_STRUCT* uartS, UART_HandleTypeDef* uartH,RingBuffer_t* rbRX, DoubleBuffer_t* dbTX,uint8_t* ISRBuf) {
 	uartS->uartHandler = uartH;
