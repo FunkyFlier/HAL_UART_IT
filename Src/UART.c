@@ -153,7 +153,7 @@ int UARTGetBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 
 void UARTRXCallBackHandler(UART_STRUCT* uartS) {
 	if (RingBufferWriteByte(uartS->rxBuffer, uartS->ISRBuf) == -1){
-		uartS->TXOverRun = true;
+		uartS->RXOverRun = true;
 	}
 	__HAL_UART_FLUSH_DRREGISTER(uartS->uartHandler);
 	if (HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1) != HAL_OK) {

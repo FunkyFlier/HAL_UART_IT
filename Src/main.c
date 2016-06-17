@@ -65,6 +65,7 @@ UART_HandleTypeDef huart2;
 uint8_t loopBackBuffer[UART_RING_BUF_SIZE_RX];
 uint8_t testMessage1[] = "does this work\r\n";
 uint8_t testMessage2[] = "!@#$%^&*()_+QW\r\n";
+
 //uint8_t largeTestBuffer[UART_RING_BUF_SIZE_RX];
 uint8_t testBuffer[UART_RING_BUF_SIZE_RX];
 RingBuffer_t testRingBuff;
@@ -133,6 +134,7 @@ int main(void)
 	printf("start\n");
 #endif
 	UARTInit();
+
 	UARTWriteBuffer(&UART_2_STRUCT, testMessage1, sizeof(testMessage1) - 1);
 	UARTWriteBuffer(&UART_2_STRUCT, testMessage2, sizeof(testMessage2) - 1);
 	UARTWriteBuffer(&UART_2_STRUCT, testMessage1, sizeof(testMessage1) - 1);
@@ -160,13 +162,13 @@ int main(void)
 			}
 		}
 		//temp1 = RingBufferAvailable(&testRingBuff);
-		//
-		if (RingBufferAvailable(&testRingBuff) > 0){// || (msCount > 100 && RingBufferAvailable(&testRingBuff) != 0)){
+		if (RingBufferAvailable(&testRingBuff) > 0 ){
+		//if (RingBufferAvailable(&testRingBuff) >= 200  || (msCount > 100 && RingBufferAvailable(&testRingBuff) != 0)){
 
 			readBytes = RingBufferRead(&testRingBuff,loopBackBuffer,RingBufferAvailable(&testRingBuff));
 			if (readBytes != -1){
 				if (UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,readBytes) == -1){
-					//HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, 1);
+					printf("write OF\n");
 				}
 			}else{
 
@@ -274,7 +276,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 921600;
+  huart2.Init.BaudRate = 230400;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
