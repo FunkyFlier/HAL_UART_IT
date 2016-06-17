@@ -36,19 +36,12 @@
 #include "stm32f4xx_it.h"
 
 /* USER CODE BEGIN 0 */
-extern uint32_t msCount;
-//extern uint32_t msCount,uartTimeOutDebugCounter,failedITStartCount;
-//extern volatile int TXLockCount,RXLockCount;
-//extern volatile int infiniteLoopCounter;
-#include "UART.h"
-/*#include "RingBuffer.h"
-extern uint8_t ISRBuffer[1];
-extern RingBuffer_t Uart2RXBuffer;
-extern RingBuffer_t Uart2TXBuffer;*/
+
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
 extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart6;
 
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
@@ -87,16 +80,21 @@ void USART2_IRQHandler(void)
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */
 
-	/*if (UART_2_STRUCT.fixTxISR == true){
-		if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler, UART_2_STRUCT.ISRBuf, 1) != HAL_OK) {
-			printf("rx: %i\ntx: %i\n",RXLockCount,TXLockCount);
-			failedITStartCount++;
-		}else{
-			UART_2_STRUCT.fixTxISR = false;
-		}
-	}*/
-
   /* USER CODE END USART2_IRQn 1 */
+}
+
+/**
+* @brief This function handles USART6 global interrupt.
+*/
+void USART6_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART6_IRQn 0 */
+
+  /* USER CODE END USART6_IRQn 0 */
+  HAL_UART_IRQHandler(&huart6);
+  /* USER CODE BEGIN USART6_IRQn 1 */
+
+  /* USER CODE END USART6_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */
@@ -111,8 +109,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 }
 void HAL_SYSTICK_Callback(void)
 {
-	msCount++;
-	//infiniteLoopCounter++;
+
 }
 
 

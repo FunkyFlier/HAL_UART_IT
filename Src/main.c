@@ -42,8 +42,6 @@
 #include "defines.h"
 /*
  * todo general
- * collisions fixed and buffer issues resolved
- * clean up of driver remaining
  * UART.h support DMA transfers
  */
 /* USER CODE END Includes */
@@ -52,32 +50,22 @@
 TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart2;
+UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef huart1;
- UART_HandleTypeDef huart3;
- UART_HandleTypeDef huart4;
- UART_HandleTypeDef huart5;
- UART_HandleTypeDef huart6;
- UART_HandleTypeDef huart7;
- UART_HandleTypeDef huart8;
+
+uint8_t testMessage1[] = "UART loop back demonstration\r\n";
+uint8_t testMessage2[] = "****************************\r\n";
 uint8_t loopBackBuffer[UART_RING_BUF_SIZE_RX];
-uint8_t testMessage1[] = "does this work\r\n";
-uint8_t testMessage2[] = "!@#$%^&*()_+QW\r\n";
+uint8_t loopBackUART2Buffer[UART_RING_BUF_SIZE_RX];
+RingBuffer_t loopBackUART2;
 
-uint8_t testBuffer[UART_RING_BUF_SIZE_RX];
-RingBuffer_t testRingBuff;
-uint32_t msCount;
-int readBytes;
-/*uint32_t uartTimeOutDebugCounter;
-int inByteCount,outByteCount,lostByteCount,waitToTxCount,failedITStartCount;
-int readBytes;
-int lostByDiff;
-int fixISRCount;
+uint8_t loopBackUART6Buffer[UART_RING_BUF_SIZE_RX];
+RingBuffer_t loopBackUART6;
 
-volatile int TXLockCount,RXLockCount;
-volatile int infiniteLoopCounter;*/
+int numBytes;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -86,6 +74,7 @@ void Error_Handler(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_USART6_UART_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -102,8 +91,8 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	RingBufferCreate(&testRingBuff,testBuffer,UART_RING_BUF_SIZE_RX);
-
+	RingBufferCreate(&loopBackUART2,loopBackUART2Buffer,UART_RING_BUF_SIZE_RX);
+	RingBufferCreate(&loopBackUART6,loopBackUART6Buffer,UART_RING_BUF_SIZE_RX);
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -118,6 +107,7 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM2_Init();
   MX_USART2_UART_Init();
+  MX_USART6_UART_Init();
 
   /* USER CODE BEGIN 2 */
 	HAL_TIM_Base_Start_IT(&htim2);
@@ -127,7 +117,7 @@ int main(void)
 	printf("start\n");
 #endif
 	UARTInit();
-
+	UARTWriteBuffer(&UART_2_STRUCT, testMessage2, sizeof(testMessage2) - 1);
 	UARTWriteBuffer(&UART_2_STRUCT, testMessage1, sizeof(testMessage1) - 1);
 	UARTWriteBuffer(&UART_2_STRUCT, testMessage2, sizeof(testMessage2) - 1);
 
@@ -141,23 +131,34 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-
+		//loop back UART 2
 		if (UARTAvailabe(&UART_2_STRUCT) > 0){
-			readBytes = UARTGetBuffer(&UART_2_STRUCT,loopBackBuffer,UARTAvailabe(&UART_2_STRUCT));
-			if (readBytes != -1){
-				RingBufferWrite(&testRingBuff,loopBackBuffer,readBytes);
-				msCount = 0;
+			numBytes = UARTGetBuffer(&UART_2_STRUCT,loopBackBuffer,UARTAvailabe(&UART_2_STRUCT));
+			if (numBytes != -1){
+				RingBufferWrite(&loopBackUART2,loopBackBuffer,numBytes);
 			}
 		}
-		if (RingBufferAvailable(&testRingBuff) > 0 ){
-			readBytes = RingBufferRead(&testRingBuff,loopBackBuffer,RingBufferAvailable(&testRingBuff));
-			if (readBytes != -1){
-				UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,readBytes);
+		if (RingBufferAvailable(&loopBackUART2) > 0 ){
+			numBytes = RingBufferRead(&loopBackUART2,loopBackBuffer,RingBufferAvailable(&loopBackUART2));
+			if (numBytes != -1){
+				UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,numBytes);
 			}
 
+		}
+		//loop back UART 6
+		if (UARTAvailabe(&UART_6_STRUCT) > 0){
+			numBytes = UARTGetBuffer(&UART_6_STRUCT,loopBackBuffer,UARTAvailabe(&UART_6_STRUCT));
+			if (numBytes != -1){
+				RingBufferWrite(&loopBackUART6,loopBackBuffer,numBytes);
+			}
+		}
+		if (RingBufferAvailable(&loopBackUART6) > 0 ){
+			numBytes = RingBufferRead(&loopBackUART6,loopBackBuffer,RingBufferAvailable(&loopBackUART6));
+			if (numBytes != -1){
+				UARTWriteBuffer(&UART_6_STRUCT,loopBackBuffer,numBytes);
+			}
 
 		}
-
 	}
   /* USER CODE END 3 */
 
@@ -258,6 +259,25 @@ static void MX_USART2_UART_Init(void)
 
 }
 
+/* USART6 init function */
+static void MX_USART6_UART_Init(void)
+{
+
+  huart6.Instance = USART6;
+  huart6.Init.BaudRate = 115200;
+  huart6.Init.WordLength = UART_WORDLENGTH_8B;
+  huart6.Init.StopBits = UART_STOPBITS_1;
+  huart6.Init.Parity = UART_PARITY_NONE;
+  huart6.Init.Mode = UART_MODE_TX_RX;
+  huart6.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart6.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+
 /** Configure pins as 
         * Analog 
         * Input 
@@ -271,7 +291,6 @@ static void MX_USART2_UART_Init(void)
      PA7   ------> SPI1_MOSI
      PB10   ------> I2S2_CK
      PB12   ------> I2S2_WS
-     PC7   ------> I2S3_MCK
      PA9   ------> USB_OTG_FS_VBUS
      PA10   ------> USB_OTG_FS_ID
      PA11   ------> USB_OTG_FS_DM
@@ -367,14 +386,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PC7 I2S3_SCK_Pin PC12 */
-  GPIO_InitStruct.Pin = GPIO_PIN_7|I2S3_SCK_Pin|GPIO_PIN_12;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF6_SPI3;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
   /*Configure GPIO pin : VBUS_FS_Pin */
   GPIO_InitStruct.Pin = VBUS_FS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -388,6 +399,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : I2S3_SCK_Pin PC12 */
+  GPIO_InitStruct.Pin = I2S3_SCK_Pin|GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF6_SPI3;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : OTG_FS_OverCurrent_Pin */
   GPIO_InitStruct.Pin = OTG_FS_OverCurrent_Pin;
