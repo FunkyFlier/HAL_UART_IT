@@ -6,7 +6,7 @@
  */
 
 #include "UART_BUFFER.h"
-
+/*
 void DoubleBufferCreate(DoubleBuffer_t *tb, uint8_t *buffer0, uint8_t *buffer1,int sizeOfBuffer){
 	tb->buffer0 = buffer0;
 	tb->buffer1 = buffer1;
@@ -125,7 +125,7 @@ int RingBufferRead(RingBuffer_t *rb, uint8_t *out, int count){
 	return count;
 }
 
-
+*/
 
 
 

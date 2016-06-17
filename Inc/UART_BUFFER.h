@@ -12,7 +12,7 @@
 #include "string.h"
 #include "stdint.h"
 #include <stdio.h>
-
+/*
 #define DoubleBufferFree(T) ((T)->size - (T)->writeIdx)
 #define DoubleBufferAvailable(T) ((T)->writeIdx)
 #define DoubleBufferCommitWrite(T,A) ((T)->writeIdx += A)
@@ -50,5 +50,5 @@ int RingBufferWriteByte(RingBuffer_t *, uint8_t *);
 int RingBufferWrite(RingBuffer_t *, uint8_t *, int );
 int RingBufferRead(RingBuffer_t *, uint8_t *, int );
 int RingBufferAvailable(RingBuffer_t *);
-
+*/
 #endif /* UART_BUFFER_H_ */

@@ -8,88 +8,138 @@
 
 #include <UART.h>
 
-void UARTSetup(UART_STRUCT*, UART_HandleTypeDef*, RingBuffer_t*,
-		DoubleBuffer_t*, uint8_t*);
+void UARTSetup(UART_STRUCT*, UART_HandleTypeDef*, RingBuffer_t*,DoubleBuffer_t*, uint8_t*);
 
 void UARTTXCallBackHandler(UART_STRUCT*);
 void UARTRXCallBackHandler(UART_STRUCT*);
-
+void DoubleBufferCreate(DoubleBuffer_t *, uint8_t *, uint8_t *,int );
+int DoubleBufferWrite(DoubleBuffer_t *, uint8_t *, int );
+void DoubleBufferSwap(DoubleBuffer_t *);
+int RingBufferWriteByte(RingBuffer_t *, uint8_t *);
 void UARTInit() {
 #ifdef UART_1
-	RingBufferCreate(&UART_1_RX_RING, UART_1_RX_BUFFER,(int) sizeof(UART_1_RX_BUFFER));
-	RingBufferCreate(&UART_1_TX_RING, UART_1_TX_BUFFER,(int) sizeof(UART_1_TX_BUFFER));
-	UARTSetup(&UART_1_STRUCT, &huart1, &UART_1_RX_RING, &UART_1_TX_RING,ISRBuffer_1);
-	if (HAL_UART_Receive_IT(UART_1_STRUCT.uartHandler, (uint8_t *) ISRBuffer_1, 1) != HAL_OK) {
+	if (HAL_UART_GetState(&huart1) != HAL_UART_STATE_RESET){
+		RingBufferCreate(&UART_1_RX_RING, UART_1_RX_BUFFER,(int) UART_RING_BUF_SIZE_RX);
+		DoubleBufferCreate(&UART_1_TX_DB, UART_1_TX_BUFFER1,UART_1_TX_BUFFER2,(int) UART_RING_BUF_SIZE_TX);
+		UARTSetup(&UART_1_STRUCT, &huart1, &UART_1_RX_RING, &UART_1_TX_DB,ISRBuffer_2);
+		if (HAL_UART_Receive_IT(UART_1_STRUCT.uartHandler, UART_1_STRUCT.ISRBuf, 1)!= HAL_OK) {
+#ifdef DEBUG_TO_CONSOLE
+			printf("uart1 was not enabled\n");
+#endif//DEBUG_TO_CONSOLE
+		}
+	}else{
 #ifdef DEBUG_TO_CONSOLE
 		printf("uart1 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
 	}
 #endif//UART_1
 #ifdef UART_2
-	RingBufferCreate(&UART_2_RX_RING, UART_2_RX_BUFFER,(int) UART_RING_BUF_SIZE_RX);
-	DoubleBufferCreate(&UART_2_TX_DB, UART_2_TX_BUFFER1,UART_2_TX_BUFFER2,(int) UART_RING_BUF_SIZE_TX);
-	UARTSetup(&UART_2_STRUCT, &huart2, &UART_2_RX_RING, &UART_2_TX_DB,ISRBuffer_2);
-	if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler, UART_2_STRUCT.ISRBuf, 1)!= HAL_OK) {
+	if (HAL_UART_GetState(&huart2) != HAL_UART_STATE_RESET){
+		RingBufferCreate(&UART_2_RX_RING, UART_2_RX_BUFFER,(int) UART_RING_BUF_SIZE_RX);
+		DoubleBufferCreate(&UART_2_TX_DB, UART_2_TX_BUFFER1,UART_2_TX_BUFFER2,(int) UART_RING_BUF_SIZE_TX);
+		UARTSetup(&UART_2_STRUCT, &huart2, &UART_2_RX_RING, &UART_2_TX_DB,ISRBuffer_2);
+		if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler, UART_2_STRUCT.ISRBuf, 1)!= HAL_OK) {
+#ifdef DEBUG_TO_CONSOLE
+			printf("uart2 was not enabled\n");
+#endif//DEBUG_TO_CONSOLE
+		}
+	}else{
 #ifdef DEBUG_TO_CONSOLE
 		printf("uart2 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
 	}
 #endif//UART_2
 #ifdef UART_3
-	RingBufferCreate(&UART_3_RX_RING, UART_3_RX_BUFFER,(int) sizeof(UART_3_RX_BUFFER));
-	RingBufferCreate(&UART_3_TX_RING, UART_3_TX_BUFFER,(int) sizeof(UART_3_TX_BUFFER));
-	UARTSetup(&UART_3_STRUCT, &huart3, &UART_3_RX_RING, &UART_3_TX_RING,ISRBuffer_3);
-	if (HAL_UART_Receive_IT(UART_3_STRUCT.uartHandler, (uint8_t *) ISRBuffer_3,1) != HAL_OK) {
+	if (HAL_UART_GetState(&huart3) != HAL_UART_STATE_RESET){
+		RingBufferCreate(&UART_3_RX_RING, UART_3_RX_BUFFER,(int) UART_RING_BUF_SIZE_RX);
+		DoubleBufferCreate(&UART_3_TX_DB, UART_3_TX_BUFFER1,UART_3_TX_BUFFER2,(int) UART_RING_BUF_SIZE_TX);
+		UARTSetup(&UART_3_STRUCT, &huart3, &UART_3_RX_RING, &UART_3_TX_DB,ISRBuffer_2);
+		if (HAL_UART_Receive_IT(UART_3_STRUCT.uartHandler, UART_3_STRUCT.ISRBuf, 1)!= HAL_OK) {
+#ifdef DEBUG_TO_CONSOLE
+			printf("uart3 was not enabled\n");
+#endif//DEBUG_TO_CONSOLE
+		}
+	}else{
 #ifdef DEBUG_TO_CONSOLE
 		printf("uart3 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
 	}
 #endif//UART_3
 #ifdef UART_4
-	RingBufferCreate(&UART_4_RX_RING, UART_4_RX_BUFFER,(int) sizeof(UART_4_RX_BUFFER));
-	RingBufferCreate(&UART_4_TX_RING, UART_4_TX_BUFFER,(int) sizeof(UART_4_TX_BUFFER));
-	UARTSetup(&UART_4_STRUCT, &huart4, &UART_4_RX_RING, &UART_4_TX_RING,ISRBuffer_4);
-	if (HAL_UART_Receive_IT(UART_4_STRUCT.uartHandler, (uint8_t *) ISRBuffer_4,1) != HAL_OK) {
+	if (HAL_UART_GetState(&huart4) != HAL_UART_STATE_RESET){
+		RingBufferCreate(&UART_4_RX_RING, UART_4_RX_BUFFER,(int) UART_RING_BUF_SIZE_RX);
+		DoubleBufferCreate(&UART_4_TX_DB, UART_4_TX_BUFFER1,UART_4_TX_BUFFER2,(int) UART_RING_BUF_SIZE_TX);
+		UARTSetup(&UART_4_STRUCT, &huart4, &UART_4_RX_RING, &UART_4_TX_DB,ISRBuffer_2);
+		if (HAL_UART_Receive_IT(UART_4_STRUCT.uartHandler, UART_4_STRUCT.ISRBuf, 1)!= HAL_OK) {
+#ifdef DEBUG_TO_CONSOLE
+			printf("uart4 was not enabled\n");
+#endif//DEBUG_TO_CONSOLE
+		}
+	}else{
 #ifdef DEBUG_TO_CONSOLE
 		printf("uart4 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
 	}
 #endif//UART_4
 #ifdef UART_5
-	RingBufferCreate(&UART_5_RX_RING, UART_5_RX_BUFFER,(int) sizeof(UART_5_RX_BUFFER));
-	RingBufferCreate(&UART_5_TX_RING, UART_5_TX_BUFFER,(int) sizeof(UART_5_TX_BUFFER));
-	UARTSetup(&UART_5_STRUCT, &huart5, &UART_5_RX_RING, &UART_5_TX_RING,ISRBuffer_5);
-	if (HAL_UART_Receive_IT(UART_5_STRUCT.uartHandler, (uint8_t *) ISRBuffer_5,1) != HAL_OK) {
+	if (HAL_UART_GetState(&huart5) != HAL_UART_STATE_RESET){
+		RingBufferCreate(&UART_5_RX_RING, UART_5_RX_BUFFER,(int) UART_RING_BUF_SIZE_RX);
+		DoubleBufferCreate(&UART_5_TX_DB, UART_5_TX_BUFFER1,UART_5_TX_BUFFER2,(int) UART_RING_BUF_SIZE_TX);
+		UARTSetup(&UART_5_STRUCT, &huart5, &UART_5_RX_RING, &UART_5_TX_DB,ISRBuffer_2);
+		if (HAL_UART_Receive_IT(UART_5_STRUCT.uartHandler, UART_5_STRUCT.ISRBuf, 1)!= HAL_OK) {
+#ifdef DEBUG_TO_CONSOLE
+			printf("uart5 was not enabled\n");
+#endif//DEBUG_TO_CONSOLE
+		}
+	}else{
 #ifdef DEBUG_TO_CONSOLE
 		printf("uart5 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
 	}
 #endif//UART_5
 #ifdef UART_6
-	RingBufferCreate(&UART_6_RX_RING, UART_6_RX_BUFFER,(int) sizeof(UART_6_RX_BUFFER));
-	RingBufferCreate(&UART_6_TX_RING, UART_6_TX_BUFFER,(int) sizeof(UART_6_TX_BUFFER));
-	UARTSetup(&UART_6_STRUCT, &huart6, &UART_6_RX_RING, &UART_6_TX_RING,ISRBuffer_6);
-	if (HAL_UART_Receive_IT(UART_6_STRUCT.uartHandler, (uint8_t *) ISRBuffer_6,1) != HAL_OK) {
+	if (HAL_UART_GetState(&huart6) != HAL_UART_STATE_RESET){
+		RingBufferCreate(&UART_6_RX_RING, UART_6_RX_BUFFER,(int) UART_RING_BUF_SIZE_RX);
+		DoubleBufferCreate(&UART_6_TX_DB, UART_6_TX_BUFFER1,UART_6_TX_BUFFER2,(int) UART_RING_BUF_SIZE_TX);
+		UARTSetup(&UART_6_STRUCT, &huart6, &UART_6_RX_RING, &UART_6_TX_DB,ISRBuffer_2);
+		if (HAL_UART_Receive_IT(UART_6_STRUCT.uartHandler, UART_6_STRUCT.ISRBuf, 1)!= HAL_OK) {
+#ifdef DEBUG_TO_CONSOLE
+			printf("uart6 was not enabled\n");
+#endif//DEBUG_TO_CONSOLE
+		}
+	}else{
 #ifdef DEBUG_TO_CONSOLE
 		printf("uart6 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
 	}
 #endif//UART_6
 #ifdef UART_7
-	RingBufferCreate(&UART_7_RX_RING, UART_7_RX_BUFFER,(int) sizeof(UART_7_RX_BUFFER));
-	RingBufferCreate(&UART_7_TX_RING, UART_7_TX_BUFFER,(int) sizeof(UART_7_TX_BUFFER));
-	UARTSetup(&UART_7_STRUCT, &huart7, &UART_7_RX_RING, &UART_7_TX_RING,ISRBuffer_7);
-	if (HAL_UART_Receive_IT(UART_7_STRUCT.uartHandler, (uint8_t *) ISRBuffer_7,1) != HAL_OK) {
+	if (HAL_UART_GetState(&huart7) != HAL_UART_STATE_RESET){
+		RingBufferCreate(&UART_7_RX_RING, UART_7_RX_BUFFER,(int) UART_RING_BUF_SIZE_RX);
+		DoubleBufferCreate(&UART_7_TX_DB, UART_7_TX_BUFFER1,UART_7_TX_BUFFER2,(int) UART_RING_BUF_SIZE_TX);
+		UARTSetup(&UART_7_STRUCT, &huart7, &UART_7_RX_RING, &UART_7_TX_DB,ISRBuffer_2);
+		if (HAL_UART_Receive_IT(UART_7_STRUCT.uartHandler, UART_7_STRUCT.ISRBuf, 1)!= HAL_OK) {
+#ifdef DEBUG_TO_CONSOLE
+			printf("uart7 was not enabled\n");
+#endif//DEBUG_TO_CONSOLE
+		}
+	}else{
 #ifdef DEBUG_TO_CONSOLE
 		printf("uart7 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
 	}
 #endif//UART_7
 #ifdef UART_8
-	RingBufferCreate(&UART_8_RX_RING, UART_8_RX_BUFFER,(int) sizeof(UART_8_RX_BUFFER));
-	RingBufferCreate(&UART_8_TX_RING, UART_8_TX_BUFFER,(int) sizeof(UART_8_TX_BUFFER));
-	UARTSetup(&UART_8_STRUCT, &huart8, &UART_8_RX_RING, &UART_8_TX_RING,ISRBuffer_8);
-	if (HAL_UART_Receive_IT(UART_8_STRUCT.uartHandler, (uint8_t *) ISRBuffer_8,1) != HAL_OK) {
+	if (HAL_UART_GetState(&huart8) != HAL_UART_STATE_RESET){
+		RingBufferCreate(&UART_8_RX_RING, UART_8_RX_BUFFER,(int) UART_RING_BUF_SIZE_RX);
+		DoubleBufferCreate(&UART_8_TX_DB, UART_8_TX_BUFFER1,UART_8_TX_BUFFER2,(int) UART_RING_BUF_SIZE_TX);
+		UARTSetup(&UART_8_STRUCT, &huart8, &UART_8_RX_RING, &UART_8_TX_DB,ISRBuffer_2);
+		if (HAL_UART_Receive_IT(UART_8_STRUCT.uartHandler, UART_8_STRUCT.ISRBuf, 1)!= HAL_OK) {
+#ifdef DEBUG_TO_CONSOLE
+			printf("uart8 was not enabled\n");
+#endif//DEBUG_TO_CONSOLE
+		}
+	}else{
 #ifdef DEBUG_TO_CONSOLE
 		printf("uart8 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
@@ -157,9 +207,6 @@ void UARTRXCallBackHandler(UART_STRUCT* uartS) {
 			SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_RXNEIE);
 		  }
 	}
-
-
-
 }
 
 //ISR callbacks
@@ -295,5 +342,121 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 			(int) HAL_UART_GetState(huart));
 #endif
 }
+void DoubleBufferCreate(DoubleBuffer_t *tb, uint8_t *buffer0, uint8_t *buffer1,int sizeOfBuffer){
+	tb->buffer0 = buffer0;
+	tb->buffer1 = buffer1;
+	tb->buffer = tb->buffer0;
+	tb->size = sizeOfBuffer;
+	tb->writeIdx = 0;
+	tb->useBuffer0 = true;
+	tb->writing = false;
+}
 
+//called from UARTwrite when TX is in progress
+int DoubleBufferWrite(DoubleBuffer_t *tb, uint8_t *in, int count){
+	if (DoubleBufferFree(tb) == 0){
+		return -1;
+	}
+	if (DoubleBufferFree(tb) < count){
+		count = DoubleBufferFree(tb);
+	}
+	tb->writing = true;
+	memcpy(&tb->buffer[tb->writeIdx], in, count);
+	DoubleBufferCommitWrite(tb,count);
+	tb->writing = false;
+	return count;
+}
+
+//called after one of the buffers is sent with HAL_UART_Transmit_IT
+void DoubleBufferSwap(DoubleBuffer_t *tb){
+	tb->useBuffer0 ^= true;
+	if (tb->useBuffer0 == true){
+		tb->buffer = tb->buffer0;
+	}else{
+		tb->buffer = tb->buffer1;
+	}
+	tb->writeIdx = 0;
+}
+
+int RingBufferAvailable(RingBuffer_t *rb) {
+	int readIndex = rb->readIdx;
+	int writeIndex = rb->writeIdx;
+	int available =  writeIndex - readIndex;
+	if (available < 0){
+		available += rb->size;
+	 }
+	return available;
+}
+
+void RingBufferCreate(RingBuffer_t *rb, uint8_t *buffer, int sizeOfBuffer) {
+	rb->buffer = buffer;
+	rb->size = sizeOfBuffer;
+	rb->readIdx = 0;
+	rb->writeIdx = 0;
+}
+
+//the write functions should be used in the RX ISR call back
+int RingBufferWriteByte(RingBuffer_t *rb, uint8_t *in) {
+	rb->readIdxTemp = rb->readIdx;
+	if (rb->readIdxTemp == ((rb->writeIdx + 1) % rb->size)){
+		return -1;
+	}
+	rb->buffer[rb->writeIdx] = in[0];
+	rb->writeIdx = (rb->writeIdx + (1)) % rb->size;
+	return 1;
+}
+int RingBufferWrite(RingBuffer_t *rb, uint8_t *in, int count) {
+	rb->readIdxTemp = rb->readIdx;
+	rb->availableWrite = rb->writeIdx - rb->readIdxTemp;
+	if (rb->availableWrite < 0){
+		rb->availableWrite += rb->size;
+	}
+	if (rb->availableWrite >= rb->size){
+		return -1;
+	}
+	if(rb->availableWrite == 0){
+		rb->writeIdx = rb->readIdx = 0;
+	}
+
+	if ((rb->size - rb->availableWrite) < count){
+		count = (rb->size -rb->availableWrite);
+	}
+	if (RingWriteIdxToEnd(rb) >= count){
+		memcpy(rb->buffer + rb->writeIdx, in, count);
+	}else{
+		memcpy(rb->buffer + rb->writeIdx, in, RingWriteIdxToEnd(rb));
+		memcpy(rb->buffer, in + RingWriteIdxToEnd(rb), count - RingWriteIdxToEnd(rb));
+	}
+	RingBufferCommitWrite(rb, count);
+	return count;
+}
+int RingBufferRead(RingBuffer_t *rb, uint8_t *out, int count){
+	rb->writeIdxTemp = rb->writeIdx;
+	rb->availableRead = rb->writeIdxTemp - rb->readIdx;
+	if (rb->availableRead < 0){
+		rb->availableRead += rb->size;
+	}
+	if (rb->availableRead == 0){
+		return -1;
+	}
+
+	if (rb->availableRead < count){
+		count = rb->availableRead;
+	}
+	if (rb->writeIdxTemp > rb->readIdx){
+		memcpy(out, rb->buffer + rb->readIdx, count);
+		RingBufferCommitRead(rb,count);
+		return count;
+	}
+	if (RingReadIdxToEnd(rb) >= count){
+		memcpy(out, rb->buffer + rb->readIdx, count);
+		RingBufferCommitRead(rb,count);
+		return count;
+	}else{
+		memcpy(out, rb->buffer + rb->readIdx, RingReadIdxToEnd(rb));
+		memcpy(out, rb->buffer , count - RingReadIdxToEnd(rb));
+	}
+	RingBufferCommitRead(rb,count);
+	return count;
+}
 

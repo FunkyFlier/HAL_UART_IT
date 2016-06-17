@@ -55,13 +55,13 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-/*UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart1;
  UART_HandleTypeDef huart3;
  UART_HandleTypeDef huart4;
  UART_HandleTypeDef huart5;
  UART_HandleTypeDef huart6;
  UART_HandleTypeDef huart7;
- UART_HandleTypeDef huart8;*/
+ UART_HandleTypeDef huart8;
 uint8_t loopBackBuffer[UART_RING_BUF_SIZE_RX];
 uint8_t testMessage1[] = "does this work\r\n";
 uint8_t testMessage2[] = "!@#$%^&*()_+QW\r\n";
@@ -147,21 +147,12 @@ int main(void)
 			if (readBytes != -1){
 				RingBufferWrite(&testRingBuff,loopBackBuffer,readBytes);
 				msCount = 0;
-			}else{
-
 			}
 		}
-		//temp1 = RingBufferAvailable(&testRingBuff);
 		if (RingBufferAvailable(&testRingBuff) > 0 ){
-		//if (RingBufferAvailable(&testRingBuff) >= 200  || (msCount > 100 && RingBufferAvailable(&testRingBuff) != 0)){
-
 			readBytes = RingBufferRead(&testRingBuff,loopBackBuffer,RingBufferAvailable(&testRingBuff));
 			if (readBytes != -1){
-				if (UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,readBytes) == -1){
-					printf("write OF\n");
-				}
-			}else{
-
+				UARTWriteBuffer(&UART_2_STRUCT,loopBackBuffer,readBytes);
 			}
 
 
