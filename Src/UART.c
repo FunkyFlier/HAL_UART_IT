@@ -8,9 +8,6 @@
 
 #include <UART.h>
 
-//extern int inByteCount, outByteCount, lostByteCount,fixISRCount;
-//extern volatile int infiniteLoopCounter;
-
 void UARTSetup(UART_STRUCT*, UART_HandleTypeDef*, RingBuffer_t*,
 		DoubleBuffer_t*, uint8_t*);
 
@@ -132,21 +129,13 @@ void UARTTXCallBackHandler(UART_STRUCT* uartS) {
 	if (DoubleBufferAvailable(uartS->txBuffer) > 0){
 		if (HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer, DoubleBufferAvailable(uartS->txBuffer)) != HAL_BUSY) {
 			DoubleBufferSwap(uartS->txBuffer);
-		}else{
-			printf("tx buffer err in ISR\n");
 		}
 	}
-
 }
 int UARTAvailabe(UART_STRUCT* uartS) {
-	//return RingBufferAvailable(uartS->rxBuffer);
 	return RingBufferAvailable(uartS->rxBuffer);
-	//return 0;
 }
-int UARTGetByte(UART_STRUCT* uartS, uint8_t* buff) {
-	//return RingBufferReadByte(uartS->rxBuffer, buff);
-	return 0;
-}
+
 int UARTGetBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 	return RingBufferRead(uartS->rxBuffer,buff,n);
 }
@@ -307,27 +296,4 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 #endif
 }
 
-//end ISR callbacks
-//streamings
-/*#ifdef UART_STREAMING
- #define UART_STREAM_HANDLER UART_2_STRUCT
- FILE* UART_STREAM_CONFIG() {
- uart_Stream = funopen(cookiePointer, UART_PUTC, UART_GETC,NULL, NULL);
- return uart_Stream;
- }
- int UART_PUTC(void *cookie, char *buf, int n) {
- if (UARTWriteBuffer(&UART_STREAM_HANDLER, (uint8_t*)buf, n) != 0) {
- printf("putc\n");
- return -1;
- }
- return 0;
- }
- int UART_GETC(void *cookie, const char *buf, int n) {
- if (UARTGetBuffer(&UART_STREAM_HANDLER, (uint8_t*)buf, n) != 0) {
- printf("getc\n");
- return -1;
- }
- return 0;
- }
- #endif*/
-//end streaming
+

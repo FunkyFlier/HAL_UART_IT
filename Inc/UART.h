@@ -42,9 +42,8 @@ typedef struct {
 
 void UARTInit();
 
-int UARTWriteByte(UART_STRUCT*, uint8_t*);
+// UARTWriteByte(UART_STRUCT*, uint8_t*);
 int UARTWriteBuffer(UART_STRUCT*, uint8_t*, int);
-int UARTGetByte(UART_STRUCT*, uint8_t*);
 int UARTGetBuffer(UART_STRUCT*, uint8_t*, int);
 int UARTAvailabe(UART_STRUCT*);
 
@@ -123,15 +122,5 @@ extern UART_HandleTypeDef huart8;
 #endif
 
 
-/*
-#define UART_STREAMING
-#ifdef UART_STREAMING
-cookie_io_functions_t* cookiePointer;
-FILE* uart_Stream;
-FILE* UART_STREAM_CONFIG();
-int UART_PUTC(void*, char*,int);
-int UART_GETC(void*,const char* ,int n);
-
-#endif*/
 
 #endif /* UART_H_ */

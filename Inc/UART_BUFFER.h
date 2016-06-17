@@ -7,30 +7,28 @@
 
 #ifndef UART_BUFFER_H_
 #define UART_BUFFER_H_
+
 #include <stdbool.h>
 #include "string.h"
 #include "stdint.h"
 #include <stdio.h>
-//macros
+
 #define DoubleBufferFree(T) ((T)->size - (T)->writeIdx)
 #define DoubleBufferAvailable(T) ((T)->writeIdx)
 #define DoubleBufferCommitWrite(T,A) ((T)->writeIdx += A)
 
 #define RingBufferFree(B) ((B)->size - RingBufferAvailable(B))
-#define RingWriteIdxToEnd(B) ((B)->size - (B)->writeIdx)//todo rename these
+#define RingWriteIdxToEnd(B) ((B)->size - (B)->writeIdx)
 #define RingReadIdxToEnd(B) ((B)->size - (B)->readIdx)
 #define RingBufferCommitRead(B, A) ((B)->readIdx = ((B)->readIdx + (A)) % (B)->size)
 #define RingBufferCommitWrite(B, A) ((B)->writeIdx = ((B)->writeIdx + (A)) % (B)->size)
 
-
-
 typedef struct{
 	uint8_t* buffer;
 	uint16_t size;
-	volatile int writeIdx;
-	volatile int readIdx;
-	volatile int availableIn;
-	volatile int availableOut;
+	volatile int writeIdx,writeIdxTemp;
+	volatile int readIdx,readIdxTemp;
+	volatile int availableWrite,availableRead;
 }RingBuffer_t;
 
 typedef struct{
@@ -47,9 +45,10 @@ void DoubleBufferCreate(DoubleBuffer_t *, uint8_t *, uint8_t *,int );
 int DoubleBufferWrite(DoubleBuffer_t *, uint8_t *, int );
 void DoubleBufferSwap(DoubleBuffer_t *);
 void RingBufferCreate(RingBuffer_t *, uint8_t *, int );
+
 int RingBufferWriteByte(RingBuffer_t *, uint8_t *);
 int RingBufferWrite(RingBuffer_t *, uint8_t *, int );
 int RingBufferRead(RingBuffer_t *, uint8_t *, int );
-int RingBufferReadByte(RingBuffer_t *, uint8_t *);
 int RingBufferAvailable(RingBuffer_t *);
+
 #endif /* UART_BUFFER_H_ */

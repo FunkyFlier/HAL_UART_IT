@@ -66,18 +66,18 @@ uint8_t loopBackBuffer[UART_RING_BUF_SIZE_RX];
 uint8_t testMessage1[] = "does this work\r\n";
 uint8_t testMessage2[] = "!@#$%^&*()_+QW\r\n";
 
-//uint8_t largeTestBuffer[UART_RING_BUF_SIZE_RX];
 uint8_t testBuffer[UART_RING_BUF_SIZE_RX];
 RingBuffer_t testRingBuff;
 uint32_t msCount;
-uint32_t uartTimeOutDebugCounter;
+int readBytes;
+/*uint32_t uartTimeOutDebugCounter;
 int inByteCount,outByteCount,lostByteCount,waitToTxCount,failedITStartCount;
 int readBytes;
 int lostByDiff;
 int fixISRCount;
 
 volatile int TXLockCount,RXLockCount;
-volatile int infiniteLoopCounter;
+volatile int infiniteLoopCounter;*/
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -92,11 +92,10 @@ static void MX_USART2_UART_Init(void);
 #ifdef DEBUG_TO_CONSOLE
 extern void initialise_monitor_handles(void);
 #endif
-//void RingBufferTest();
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-int temp1,temp2;
+
 /* USER CODE END 0 */
 
 int main(void)
@@ -104,10 +103,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 	RingBufferCreate(&testRingBuff,testBuffer,UART_RING_BUF_SIZE_RX);
-	/*uint8_t wtest = 0;
-	uint8_t rtest = 125;
-	int	rbReturn = ((typeof( wtest ))(( wtest ) - ( rtest )));
-	printf("start\n");*/
+
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -125,10 +121,7 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
 	HAL_TIM_Base_Start_IT(&htim2);
-	HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, 0);
-	HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, 0);
-	HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, 0);
-	HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, 0);
+
 #ifdef DEBUG_TO_CONSOLE
 	initialise_monitor_handles();
 	printf("start\n");
@@ -137,12 +130,9 @@ int main(void)
 
 	UARTWriteBuffer(&UART_2_STRUCT, testMessage1, sizeof(testMessage1) - 1);
 	UARTWriteBuffer(&UART_2_STRUCT, testMessage2, sizeof(testMessage2) - 1);
-	UARTWriteBuffer(&UART_2_STRUCT, testMessage1, sizeof(testMessage1) - 1);
-	UARTWriteBuffer(&UART_2_STRUCT, testMessage2, sizeof(testMessage2) - 1);
-	//FILE* uartStream = UART_STREAM_CONFIG();
-	//fputc(0x55,uartStream);
-	//fputs("stream test\n",uartStream);
-	msCount = 0;
+
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -175,19 +165,6 @@ int main(void)
 			}
 
 
-		}
-		if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET){
-			lostByDiff = inByteCount - outByteCount;
-			printf("in: %i\nout: %i\nlost: %i\nlost diff: %i\nfails: %i\nfixisr: %i\n",inByteCount , outByteCount,lostByteCount,lostByDiff,failedITStartCount,fixISRCount);
-			inByteCount = 0;
-			outByteCount = 0;
-			lostByteCount = 0;//inc in RX cb if col flag already set
-			failedITStartCount = 0;//inc in USART2_IRQHandler is unable to restart
-			fixISRCount = 0;//fixISRCount in RX cb if HAL_UART_Receive_IT is busy
-			HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, 0);
-			HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, 0);
-			HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, 0);
-			HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, 0);
 		}
 
 	}
@@ -276,7 +253,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 230400;
+  huart2.Init.BaudRate = 115200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -450,23 +427,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void RingBufferTest() {
-	/*static int returnCode;
-	uint8_t readBuffer[128];
-	//too much data to ring buffer
-	//returnCode = RingBufferWrite(&testRingBuff,largeTestBuffer,(int)sizeof(largeTestBuffer));
-	//overrun condition
-	RingBufferWrite(&testRingBuff,largeTestBuffer,120);
-	returnCode = RingBufferWrite(&testRingBuff,largeTestBuffer,20);
-	testRingBuff.readIdx = 121;
-	testRingBuff.writeIdx = 120;
-	printf("code: %i\n",returnCode);
-	returnCode = RingBufferRead(&testRingBuff,readBuffer,10);
-	printf("code: %i\n",returnCode);
-	returnCode = RingBufferRead(&testRingBuff,readBuffer,119);
-	printf("code: %i\n",returnCode);
-	printf("rb tests done\n");*/
-}
+
 /* USER CODE END 4 */
 
 /**
