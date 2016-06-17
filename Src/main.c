@@ -49,14 +49,16 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
 
+UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
-uint8_t testMessage1[] = "UART loop back demonstration\r\n";
+uint8_t testMessage1[] = "UART2 loop back demonstration\r\n";
 uint8_t testMessage2[] = "****************************\r\n";
+uint8_t testMessage3[] = "UART6 loop back demonstration\r\n";
 uint8_t loopBackBuffer[UART_RING_BUF_SIZE_RX];
 uint8_t loopBackUART2Buffer[UART_RING_BUF_SIZE_RX];
 RingBuffer_t loopBackUART2;
@@ -75,6 +77,7 @@ static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART6_UART_Init(void);
+static void MX_USART1_UART_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -108,6 +111,7 @@ int main(void)
   MX_TIM2_Init();
   MX_USART2_UART_Init();
   MX_USART6_UART_Init();
+  MX_USART1_UART_Init();
 
   /* USER CODE BEGIN 2 */
 	HAL_TIM_Base_Start_IT(&htim2);
@@ -117,11 +121,13 @@ int main(void)
 	printf("start\n");
 #endif
 	UARTInit();
+	UARTWriteBuffer(&UART_6_STRUCT, testMessage2, sizeof(testMessage2) - 1);
+	UARTWriteBuffer(&UART_6_STRUCT, testMessage3, sizeof(testMessage1) - 1);
+	UARTWriteBuffer(&UART_6_STRUCT, testMessage2, sizeof(testMessage2) - 1);
+
 	UARTWriteBuffer(&UART_2_STRUCT, testMessage2, sizeof(testMessage2) - 1);
 	UARTWriteBuffer(&UART_2_STRUCT, testMessage1, sizeof(testMessage1) - 1);
 	UARTWriteBuffer(&UART_2_STRUCT, testMessage2, sizeof(testMessage2) - 1);
-
-
 
   /* USER CODE END 2 */
 
@@ -240,6 +246,25 @@ static void MX_TIM2_Init(void)
 
 }
 
+/* USART1 init function */
+static void MX_USART1_UART_Init(void)
+{
+
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+}
+
 /* USART2 init function */
 static void MX_USART2_UART_Init(void)
 {
@@ -297,7 +322,6 @@ static void MX_USART6_UART_Init(void)
      PA12   ------> USB_OTG_FS_DP
      PC10   ------> I2S3_CK
      PC12   ------> I2S3_SD
-     PB6   ------> I2C1_SCL
      PB9   ------> I2C1_SDA
 */
 static void MX_GPIO_Init(void)
@@ -414,13 +438,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(OTG_FS_OverCurrent_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Audio_SCL_Pin Audio_SDA_Pin */
-  GPIO_InitStruct.Pin = Audio_SCL_Pin|Audio_SDA_Pin;
+  /*Configure GPIO pin : Audio_SDA_Pin */
+  GPIO_InitStruct.Pin = Audio_SDA_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(Audio_SDA_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(CS_I2C_SPI_GPIO_Port, CS_I2C_SPI_Pin, GPIO_PIN_RESET);

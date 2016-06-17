@@ -26,8 +26,10 @@
 //#define UART_8
 
  */
-#define UART_RING_BUF_SIZE_RX 64
-#define UART_RING_BUF_SIZE_TX 64
+
+#define LOOP_BACK_DEMO
+#define UART_RING_BUF_SIZE_RX 128
+#define UART_RING_BUF_SIZE_TX 128
 typedef struct{
 	uint8_t* buffer;
 	uint16_t size;
