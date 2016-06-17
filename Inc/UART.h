@@ -28,6 +28,7 @@
 #define UART_2
 #define UART_6
 
+
 #define LOOP_BACK_DEMO
 
 #define UART_RING_BUF_SIZE_RX 128

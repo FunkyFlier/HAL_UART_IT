@@ -107,9 +107,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	while (1) {
   /* USER CODE END WHILE */
-		UARTLoopDemo();
-  /* USER CODE BEGIN 3 */
 
+  /* USER CODE BEGIN 3 */
+		UARTLoopDemo();
 	}
   /* USER CODE END 3 */
 

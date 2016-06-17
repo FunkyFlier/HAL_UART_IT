@@ -24,7 +24,11 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 		<nature>fr.ac6.mcu.ide.core.MCUProjectNature</nature>
 	</natures>
-	<linkedResources>
+	<linkedResources><link>
+			<name>Drivers/CMSIS/system_stm32f4xx.c</name>
+			<type>1</type>
+			<location>C:/Users/work/STM32Cube/Repository/STM32Cube_FW_F4_V1.12.0/Drivers/CMSIS//Device/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c</location>
+		</link>
 		<link>
 			<name>Application/SW4STM32/startup_stm32f401xc.s</name>
 			<type>1</type>
