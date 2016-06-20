@@ -73,7 +73,7 @@ void UARTInit() {
 		RingBufferCreate(&UART_2_RX_RING, UART_2_RX_BUFFER,(int) UART_RING_BUF_SIZE_RX);
 		DoubleBufferCreate(&UART_2_TX_DB, UART_2_TX_BUFFER1,UART_2_TX_BUFFER2,(int) UART_RING_BUF_SIZE_TX);
 		UARTSetup(&UART_2_STRUCT, &huart2, &UART_2_RX_RING, &UART_2_TX_DB,ISRBuffer_2);
-		if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler, UART_2_STRUCT.ISRBuf, 1)!= HAL_OK) {
+		if (HAL_UART_Receive_IT(UART_2_STRUCT.uartHandler, UART_2_STRUCT.rxBuffer->buffer, 1)!= HAL_OK) {
 #ifdef DEBUG_TO_CONSOLE
 			printf("uart2 was not enabled\n");
 #endif//DEBUG_TO_CONSOLE
@@ -381,6 +381,16 @@ int UARTWriteBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 	if (DoubleBufferAvailable(uartS->txBuffer) > 0){
 		if (HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer, DoubleBufferAvailable(uartS->txBuffer)) != HAL_BUSY) {
 			DoubleBufferSwap(uartS->txBuffer);
+		}else{
+			if (uartS->uartHandler->gState == HAL_UART_STATE_READY){
+				uartS->uartHandler->gState = HAL_UART_STATE_BUSY_TX;
+				uartS->uartHandler->pTxBuffPtr = uartS->txBuffer->buffer;
+				uartS->uartHandler->TxXferSize = DoubleBufferAvailable(uartS->txBuffer);
+				uartS->uartHandler->TxXferCount = DoubleBufferAvailable(uartS->txBuffer);
+				uartS->uartHandler->ErrorCode = HAL_UART_ERROR_NONE;
+				SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_TXEIE);
+				DoubleBufferSwap(uartS->txBuffer);
+			}
 		}
 	}
 	return n;
@@ -393,6 +403,16 @@ void UARTTXCallBackHandler(UART_STRUCT* uartS) {
 	if (DoubleBufferAvailable(uartS->txBuffer) > 0){
 		if (HAL_UART_Transmit_IT(uartS->uartHandler, uartS->txBuffer->buffer, DoubleBufferAvailable(uartS->txBuffer)) != HAL_BUSY) {
 			DoubleBufferSwap(uartS->txBuffer);
+		}else{
+			if (uartS->uartHandler->gState == HAL_UART_STATE_READY){
+				uartS->uartHandler->gState = HAL_UART_STATE_BUSY_TX;
+				uartS->uartHandler->pTxBuffPtr = uartS->txBuffer->buffer;
+				uartS->uartHandler->TxXferSize = DoubleBufferAvailable(uartS->txBuffer);
+				uartS->uartHandler->TxXferCount = DoubleBufferAvailable(uartS->txBuffer);
+				uartS->uartHandler->ErrorCode = HAL_UART_ERROR_NONE;
+				SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_TXEIE);
+				DoubleBufferSwap(uartS->txBuffer);
+			}
 		}
 	}
 }
@@ -405,22 +425,30 @@ int UARTGetBuffer(UART_STRUCT* uartS, uint8_t* buff, int n) {
 }
 
 void UARTRXCallBackHandler(UART_STRUCT* uartS) {
-	if (RingBufferWriteByte(uartS->rxBuffer, uartS->ISRBuf) == -1){
+
+	uartS->rxBuffer->readIdxTemp = uartS->rxBuffer->readIdx;
+
+	if (uartS->rxBuffer->readIdxTemp == ((uartS->rxBuffer->writeIdx + 1) % uartS->rxBuffer->size)){
 		uartS->RXOverRun = true;
+	}else{
+		uartS->rxBuffer->writeIdx = (uartS->rxBuffer->writeIdx + (1)) % uartS->rxBuffer->size;
+
+		if (HAL_UART_Receive_IT(uartS->uartHandler, uartS->rxBuffer->buffer + uartS->rxBuffer->writeIdx, 1) != HAL_OK) {
+			if (uartS->uartHandler->RxState == HAL_UART_STATE_READY){
+				uartS->uartHandler->RxState = HAL_UART_STATE_BUSY_RX;
+				uartS->uartHandler->pRxBuffPtr = uartS->rxBuffer->buffer + uartS->rxBuffer->writeIdx;
+				uartS->uartHandler->RxXferSize = 1;
+				uartS->uartHandler->RxXferCount = 1;
+				uartS->uartHandler->ErrorCode = HAL_UART_ERROR_NONE;
+				SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_PEIE);
+				SET_BIT(uartS->uartHandler->Instance->CR3, USART_CR3_EIE);
+				SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_RXNEIE);
+			  }
+		}
 	}
 	__HAL_UART_FLUSH_DRREGISTER(uartS->uartHandler);
-	if (HAL_UART_Receive_IT(uartS->uartHandler, uartS->ISRBuf, 1) != HAL_OK) {
-		if (uartS->uartHandler->RxState == HAL_UART_STATE_READY){
-			uartS->uartHandler->RxState = HAL_UART_STATE_BUSY_RX;
-			uartS->uartHandler->pRxBuffPtr = uartS->ISRBuf;
-			uartS->uartHandler->RxXferSize = 1;
-			uartS->uartHandler->RxXferCount = 1;
-			uartS->uartHandler->ErrorCode = HAL_UART_ERROR_NONE;
-			SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_PEIE);
-			SET_BIT(uartS->uartHandler->Instance->CR3, USART_CR3_EIE);
-			SET_BIT(uartS->uartHandler->Instance->CR1, USART_CR1_RXNEIE);
-		  }
-	}
+
+
 }
 
 //ISR callbacks
