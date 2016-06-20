@@ -3,27 +3,54 @@
  *
  *  Created on: Jun 6, 2016
  *      Author: work
+ *
+ * Cube code must have UART_HandleTypeDef having gState and RxState instead of just State
+ * Tested working on:
+ * F0 v1.6.0
+ * F4 v1.12.0
+ * Assumed working:
+ * F3 v1.5.0
+ * F7 v1.4.0
+ * L0 v1.7.0
+ * L4 v1.5.0
+ * Will not work with:
+ * F1 v1.4.0
+ * F2 v1.3.0
+ * L1 v1.5.0
+ *
+ * Usage:
+ * 1 - Select defines
+ * 2 - Call UARTInit() in user code 2 of main loop
+ * 3 - Call UARTLoopDemo() in while(1){} if using loop back demonstration
+ *
+ * #define UART_1
+ * #define UART_2
+ * #define UART_3
+ * #define UART_4
+ * #define UART_5
+ * #define UART_6
+ * #define UART_7
+ * #define UART_8
+ * #include "stm32f0xx_hal.h"
+ * #include "stm32f3xx_hal.h"
+ * #include "stm32f4xx_hal.h"
+ * #include "stm32f5xx_hal.h"
+ * #include "stm32l0xx_hal.h"
+ * #include "stm32l4xx_hal.h"
+ * Do not define unless using demo
+ * #define LOOP_BACK_DEMO
  */
 
 #ifndef UART_H_
 #define UART_H_
 
-#include "stm32f4xx_hal.h"
 #include <string.h>
 #include <stdbool.h>
 #include "stdint.h"
 #include <stdio.h>
-/*
-//#define UART_1
-//#define UART_2
-//#define UART_3
-//#define UART_4
-//#define UART_5
-//#define UART_6
-//#define UART_7
-//#define UART_8
 
- */
+//user defines----------------------
+#include "stm32f4xx_hal.h"
 #define UART_1
 #define UART_2
 #define UART_6
@@ -33,6 +60,7 @@
 
 #define UART_RING_BUF_SIZE_RX 128
 #define UART_RING_BUF_SIZE_TX 128
+//user defines----------------------
 
 typedef struct{
 	uint8_t* buffer;
